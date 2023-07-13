@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AMST_Proyecto</string>
+
+    <string name="bienvenido"><font color="#FF555555">Bienvenido</font></string>
+    <string name="login"><font color="#FF555555" size="30">Iniciar sesion</font></string>
+    <string name="log_in"><font color="#FFFFFFFF">Iniciar sesion</font></string>
+    <string name="username"><font color="#FF555555">Usuario</font></string>
+    <string name="password"><font color="#FF555555">Contraseña</font></string>
+    <string name="continuar_google"><font color="#FF555555">Continuar con Google</font></string>
+    <string name="forgot"><u>¿Has olvidado tu contraseña?</u></string>
+    <string name="no_cuenta">¿Aun no tienes una cuenta?</string>
+    <string name="registrarse"><u>Registrarse</u></string>
+    <string name="mostrar_contraseña">Mostrar</string>
+
+    <string name="horarios_buses">Horarios de los buses</string>
+    <string name="reporte">Reporte</string>
+    <string name="cerrar_sesion">Cerrar sesion</string>
+    <string name="ubicacion_buses">Ubicacion de buses</string>
+    <string name="editar_horario">Editar horarios</string>
+    <string name="agregar_horario">Agregar horarios</string>
+    <string name="lista_reportes">Historial de reportes</string>
+
+    <string name="navigation_drawer_open">navigation_drawer_open</string>
+    <string name="navigation_drawer_close">navigation_drawer_close</string>
+
+</resources>

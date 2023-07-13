@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/idAdminHorariosBuses"
+        android:icon="@drawable/horario_icon"
+        android:title="@string/horarios_buses" />
+    <item
+        android:id="@+id/idAdminVisualizarBuses"
+        android:icon="@drawable/ubicacion_buses_icon"
+        android:title="@string/ubicacion_buses" />
+    <item
+        android:id="@+id/idAdminReporteMap"
+        android:icon="@drawable/reprote_icon"
+        android:title="@string/reporte" />
+    <item
+        android:id="@+id/idEditarHorarios"
+        android:icon="@drawable/editarhorario_icon"
+        android:title="@string/editar_horario" />
+    <item
+        android:id="@+id/idAdminAgregarHorario"
+        android:icon="@drawable/agregarhorario_icon"
+        android:title="@string/agregar_horario" />
+    <item
+        android:id="@+id/idAdminListaReporte"
+        android:icon="@drawable/listareportes_icon"
+        android:title="@string/lista_reportes" />
+    <item
+        android:id="@+id/idAdminCerrarSesion"
+        android:icon="@drawable/cerrarsesion_icon"
+        android:title="@string/cerrar_sesion" />
+
+</menu>
