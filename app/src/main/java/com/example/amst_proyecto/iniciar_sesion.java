@@ -66,7 +66,7 @@ public class iniciar_sesion extends AppCompatActivity {
                 }
             }
         });
-        mAuth = FirebaseAuth.getInstance();
+        //mAuth = FirebaseAuth.getInstance();
 
         btnIniciarSesion.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -96,17 +96,17 @@ public class iniciar_sesion extends AppCompatActivity {
         String usuario = etUsuario.getText().toString();
         String contraseña = editTextPassword.getText().toString();
 
-        mAuth.signInWithEmailAndPassword(usuario, contraseña)
-                .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
+        //mAuth.signInWithEmailAndPassword(usuario, contraseña)
+        //        .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+        //            @Override
+        //            public void onComplete(@NonNull Task<AuthResult> task) {
+        //                if (task.isSuccessful()) {
                             redirigirAMenu();
-                        } else {
-                            Toast.makeText(iniciar_sesion.this, "Error al iniciar sesión", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
+        //                } else {
+        //                    Toast.makeText(iniciar_sesion.this, "Error al iniciar sesión", Toast.LENGTH_SHORT).show();
+        //                }
+        //            }
+        //        });
     }
 
     private void iniciarSesionConGoogle() {
@@ -123,28 +123,31 @@ public class iniciar_sesion extends AppCompatActivity {
             try {
                 // Inicio de sesión con Google exitoso, autenticar con Firebase
                 GoogleSignInAccount account = task.getResult(ApiException.class);
-                firebaseAuthWithGoogle(account);
+                //firebaseAuthWithGoogle(account);
+
+
             } catch (ApiException e) {
-                Toast.makeText(this, "Error al iniciar sesión con Google", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this, "Error al iniciar sesión con Google", Toast.LENGTH_SHORT).show();
+                firebaseAuthWithGoogle();//Eliminar cuando se haga la base de datos
             }
         }
     }
 
-    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
-        AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
-        mAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
+    private void firebaseAuthWithGoogle(){//GoogleSignInAccount acct) {
+        //AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
+        //mAuth.signInWithCredential(credential)
+        //        .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+        //            @Override
+        //            public void onComplete(@NonNull Task<AuthResult> task) {
+        //                if (task.isSuccessful()) {
                             // El inicio de sesión fue exitoso, redirige al usuario al menú
                             redirigirAMenu();
-                        } else {
-                            // El inicio de sesión falló, muestra un mensaje de error
-                            Toast.makeText(iniciar_sesion.this, "Error al iniciar sesión con Google", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
+        //                } else {
+        //                    // El inicio de sesión falló, muestra un mensaje de error
+                            //Toast.makeText(iniciar_sesion.this, "Error al iniciar sesión con Google", Toast.LENGTH_SHORT).show();
+        //                }
+        //            }
+        //        });
     }
     private void redirigirAMenu() {
         Intent intent = new Intent(iniciar_sesion.this, entorno_principal.class);
