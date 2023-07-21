@@ -51,8 +51,7 @@
             app:headerLayout="@layout/menu_principal_headeruser"
             app:itemBackground="@drawable/menu_option_click"
             app:itemIconTint="@color/black"
-            app:itemTextColor="@color/black"
-            app:menu="@menu/menu_principal_administrador" />
+            app:itemTextColor="@color/black" />
 
 
     </androidx.drawerlayout.widget.DrawerLayout>

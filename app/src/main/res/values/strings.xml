@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AMST_Proyecto</string>
+    <string name="app_name">PoliProtect</string>
 
-    <string name="bienvenido"><font color="#FF555555">Bienvenido</font></string>
+    <string name="bienvenido"><font color="#FFFFFFFF"><b>Bienvenido</b></font></string>
+
     <string name="login"><font color="#FF555555" size="30">Iniciar sesion</font></string>
     <string name="log_in"><font color="#FFFFFFFF">Iniciar sesion</font></string>
     <string name="username"><font color="#FF555555">Usuario</font></string>
@@ -12,7 +13,7 @@
     <string name="no_cuenta">¿Aun no tienes una cuenta?</string>
     <string name="registrarse"><u>Registrarse</u></string>
     <string name="mostrar_contraseña">Mostrar</string>
-    <string name="default_web_client_id">TU_CLIENT_ID_DE_GOOGLE</string>
+    <string name="default_web_client_id">default_web_client_id</string>
 
     <string name="horarios_buses">Horarios de los buses</string>
     <string name="reporte">Reporte</string>

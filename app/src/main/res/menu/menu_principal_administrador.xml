@@ -28,5 +28,4 @@
         android:id="@+id/idAdminCerrarSesion"
         android:icon="@drawable/cerrarsesion_icon"
         android:title="@string/cerrar_sesion" />
-
 </menu>

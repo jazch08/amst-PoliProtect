@@ -1,41 +1,41 @@
 package com.example.amst_proyecto;
 
-import androidx.annotation.NonNull;
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.method.PasswordTransformationMethod;
+import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+
+import java.util.HashMap;
 
 
 public class iniciar_sesion extends AppCompatActivity {
     private static final int RC_SIGN_IN = 9001;
     private GoogleSignInClient mGoogleSignInClient;
-    private Button btnIniciarSesion;
-    private Button btnIniciarSesionGoogle;
     private FirebaseAuth mAuth;
     private GoogleApiClient mGoogleApiClient;
     private EditText etUsuario;
@@ -52,8 +52,8 @@ public class iniciar_sesion extends AppCompatActivity {
         checkboxShowPassword = findViewById(R.id.idCheckboxShowPassword);
         editTextPassword = findViewById(R.id.idEditTextPassword);
         etUsuario = findViewById(R.id.editTextText);
-        btnIniciarSesion = findViewById(R.id.button);
-        btnIniciarSesionGoogle = findViewById(R.id.button2);
+
+        // CheckBox que permite visualizar u ocultar la contraseña.
         checkboxShowPassword.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -66,21 +66,8 @@ public class iniciar_sesion extends AppCompatActivity {
                 }
             }
         });
-        //mAuth = FirebaseAuth.getInstance();
 
-        btnIniciarSesion.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                iniciarSesion();
-            }
-        });
-
-        btnIniciarSesionGoogle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                iniciarSesionConGoogle();
-            }
-        });
+        mAuth = FirebaseAuth.getInstance();
 
         // Configurar opciones de inicio de sesión con Google
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -90,9 +77,23 @@ public class iniciar_sesion extends AppCompatActivity {
 
         // Crear el cliente de inicio de sesión con Google
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
+        // Evento de cerrar sesion
+        Intent intentCerrarSesion = getIntent();
+        String msg = intentCerrarSesion.getStringExtra("msg");
+        if(msg != null){
+            if(msg.equals("cerrarSesion")){
+                cerrarSesion();
+            }
+        }
     }
 
-    private void iniciarSesion() {
+    private void cerrarSesion() {
+        mGoogleSignInClient.signOut().addOnCompleteListener(this,
+                task -> updateUI(null));
+    }
+
+    public void iniciarSesion(View v) {
         String usuario = etUsuario.getText().toString();
         String contraseña = editTextPassword.getText().toString();
 
@@ -101,7 +102,6 @@ public class iniciar_sesion extends AppCompatActivity {
         //            @Override
         //            public void onComplete(@NonNull Task<AuthResult> task) {
         //                if (task.isSuccessful()) {
-                            redirigirAMenu();
         //                } else {
         //                    Toast.makeText(iniciar_sesion.this, "Error al iniciar sesión", Toast.LENGTH_SHORT).show();
         //                }
@@ -109,49 +109,54 @@ public class iniciar_sesion extends AppCompatActivity {
         //        });
     }
 
-    private void iniciarSesionConGoogle() {
-        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
-        startActivityForResult(signInIntent, RC_SIGN_IN);
+    public void iniciarSesionGoogle(View v) {
+        resultLauncher.launch(new Intent(mGoogleSignInClient.getSignInIntent()));
     }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == RC_SIGN_IN) {
-            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            try {
-                // Inicio de sesión con Google exitoso, autenticar con Firebase
-                GoogleSignInAccount account = task.getResult(ApiException.class);
-                //firebaseAuthWithGoogle(account);
-
-
-            } catch (ApiException e) {
-                //Toast.makeText(this, "Error al iniciar sesión con Google", Toast.LENGTH_SHORT).show();
-                firebaseAuthWithGoogle();//Eliminar cuando se haga la base de datos
+    ActivityResultLauncher<Intent> resultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+        @Override
+        public void onActivityResult(ActivityResult result) {
+            if (result.getResultCode() == Activity.RESULT_OK) {
+                Intent intent = result.getData();
+                Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(intent);
+                try {
+                    GoogleSignInAccount account = task.getResult(ApiException.class);
+                    if (account != null) firebaseAuthWithGoogle(account);
+                } catch (ApiException e) {
+                    Log.w("TAG", "Fallo el inicio de sesión con google.", e);
+                }
             }
         }
+    });
+
+    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
+        Log.d("TAG", "firebaseAuthWithGoogle:" + acct.getId());
+        AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(),
+                null);
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        updateUI(user);
+                    } else {
+                        System.out.println("error");
+                        updateUI(null);
+                    }
+                });
     }
 
-    private void firebaseAuthWithGoogle(){//GoogleSignInAccount acct) {
-        //AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
-        //mAuth.signInWithCredential(credential)
-        //        .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-        //            @Override
-        //            public void onComplete(@NonNull Task<AuthResult> task) {
-        //                if (task.isSuccessful()) {
-                            // El inicio de sesión fue exitoso, redirige al usuario al menú
-                            redirigirAMenu();
-        //                } else {
-        //                    // El inicio de sesión falló, muestra un mensaje de error
-                            //Toast.makeText(iniciar_sesion.this, "Error al iniciar sesión con Google", Toast.LENGTH_SHORT).show();
-        //                }
-        //            }
-        //        });
-    }
-    private void redirigirAMenu() {
-        Intent intent = new Intent(iniciar_sesion.this, entorno_principal.class);
-        startActivity(intent);
-        finish();
+    private void updateUI(FirebaseUser user) {
+        if (user != null) {
+
+            HashMap<String, String> info_user = new HashMap<String, String>();
+            info_user.put("user_name", user.getDisplayName());
+            info_user.put("user_email", user.getEmail());
+            info_user.put("user_photo", String.valueOf(user.getPhotoUrl()));
+            finish();
+            Intent intent = new Intent(this, entorno_principal.class);
+            intent.putExtra("info_user", info_user);
+            startActivity(intent);
+        } else {
+            System.out.println("sin registrarse");
+        }
     }
 }

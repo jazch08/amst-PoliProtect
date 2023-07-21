@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "906374933031",
+    "project_id": "poliprotect-6b93c",
+    "storage_bucket": "poliprotect-6b93c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:906374933031:android:48a2c6e4241e6e579c7c02",
+        "android_client_info": {
+          "package_name": "com.example.amst_proyecto"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "906374933031-26l7emargqcgh3sllshn7v2f3aqdoub0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.amst_proyecto",
+            "certificate_hash": "f52384980253b79c9c5ecda6547c8d25b95f4c98"
+          }
+        },
+        {
+          "client_id": "906374933031-ldcobkeloh1knj1jc53lhltlkipshl6b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJRSQnfMhIX8zuF4jvzugfQ2oWAqFq-W8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "906374933031-ldcobkeloh1knj1jc53lhltlkipshl6b.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
