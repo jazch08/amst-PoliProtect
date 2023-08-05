@@ -2,14 +2,20 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/idEstudianteHorariosBuses"
+        android:checkable="true"
+        android:checked="true"
         android:icon="@drawable/horario_icon"
         android:title="@string/horarios_buses" />
     <item
         android:id="@+id/idEstudiantReporteMap"
+        android:checkable="true"
+        android:checked="true"
         android:icon="@drawable/reprote_icon"
         android:title="@string/reporte" />
     <item
         android:id="@+id/idEstudiantCerrarSesion"
+        android:checkable="true"
+        android:checked="true"
         android:icon="@drawable/cerrarsesion_icon"
         android:title="@string/cerrar_sesion" />
 </menu>

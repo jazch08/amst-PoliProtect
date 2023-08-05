@@ -9,10 +9,13 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -21,6 +24,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -32,9 +36,12 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
 
-public class entorno_principal extends AppCompatActivity implements OnMapReadyCallback {
+public class entorno_principal extends AppCompatActivity implements OnMapReadyCallback, AdapterItemHorario.OnItemClickListener {
 
     // Declaracion de los elementos relacionado a la interfaz grafica
     private Toolbar toolbar;
@@ -48,8 +55,11 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
     private MapView mapView;
     private GoogleMap googleMap;
 
-    // Daclaracion de variables relacionada a los permisos
+    // Declaracion de variables relacionada a los permisos
     private static final int REQUEST_LOCATION_PERMISSION = 1;
+
+    // Declaracion de Adaptadores
+    private AdapterItemHorario adapterHorario;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +88,7 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
         loadDataUser();
 
         if(savedInstanceState == null){
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainer, new HorrariosBusesFragment()).commit();
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainer, new HorariosBusesFragment()).commit();
             navigationView.setCheckedItem(R.id.idAdminHorariosBuses);
         }
 
@@ -91,6 +101,7 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
 
                 // Eventos para el administrador
                 if(idItem == R.id.idAdminHorariosBuses){
+
 
                 } else if (idItem == R.id.idAdminVisualizarBuses) {
 
@@ -112,9 +123,62 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
 
                 // Eventos para el estudiante
                 else if (idItem == R.id.idEstudianteHorariosBuses) {
+                    // Definir el titulo de la toolbar
+                    toolbar.setTitle("Horarios de los Buses");
+
                     // Infla el archivo xml en el contenedor de la actividad
-                    getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainer, new HorrariosBusesFragment()).commit();
+                    //getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainer, new HorrariosBusesFragment()).commit();
+
+                    // Declara el objeto que representa el archivo xml que se piensa inflar
+                    HorariosBusesFragment horariosBusesFragment = new HorariosBusesFragment();
+
+                    // Infla el archivo xml en el contenedor de la actividad
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    fragmentManager.beginTransaction()
+                            .replace(R.id.fragmentContainer, horariosBusesFragment)
+                            .commit();
+
+                    // Las modificaciones de elementos de la interfaz grafica se generan despues de 1ms
+                    // Nota: Se debe esperar un tiempo para inflar el xml, o si no genera error.
+                    Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                @Override
+                                public void run() {
+
+                                    // Se implementa los elementos para el recycleView, en este caso los horarios
+                                    RecyclerView recyclerViewHorario;
+                                    recyclerViewHorario = horariosBusesFragment.requireView().findViewById(R.id.idRecycleViewHorarios);
+                                    LinearLayoutManager layoutManager = new LinearLayoutManager(entorno_principal.this);
+                                    recyclerViewHorario.setLayoutManager(layoutManager);
+
+                                    List<String> horasinicio = new ArrayList<>();
+                                    List<String> horasfin = new ArrayList<>();
+
+                                    // Agregar arreglos a la lista de listas
+                                    horasinicio.add("14:00");
+                                    horasinicio.add("16:00");
+                                    horasinicio.add("20:00");
+
+                                    horasfin.add("16:00");
+                                    horasfin.add("18:00");
+                                    horasfin.add("20:00");
+
+                                    adapterHorario = new AdapterItemHorario(horasinicio,horasfin);
+                                    adapterHorario.setOnItemClickListener(entorno_principal.this);
+                                    recyclerViewHorario.setAdapter(adapterHorario);
+
+                                }
+                            });
+                        }
+                    }, 1);
+
                 } else if (idItem == R.id.idEstudiantReporteMap) {
+                    // Definir el titulo de la toolbar
+                    toolbar.setTitle("Reporte");
+
                     // Declara el objeto que representa el archivo xml que se piensa inflar
                     UbicacionBusesFragment ubicacionBusesFragment = new UbicacionBusesFragment();
 
@@ -145,7 +209,7 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
                             new Handler(Looper.getMainLooper()).post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    mapView = ubicacionBusesFragment.getView().findViewById(R.id.mapViewImage);
+                                    mapView = ubicacionBusesFragment.requireView().findViewById(R.id.mapViewImage);
                                     mapView.onCreate(savedInstanceState);
                                     mapView.getMapAsync(entorno_principal.this);
                                 }
@@ -171,6 +235,52 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
         });
 
     }
+
+    // Definir el evento onClick para in item de AdapterHorario
+    @Override
+    public void onItemClick(int position) {
+        // Mensaje
+        Toast.makeText(this, "Elemento en la posición " + position + " clickeado", Toast.LENGTH_SHORT).show();
+/*
+        // Declara el objeto que representa el archivo xml que se piensa inflar
+        UbicacionBusesFragment ubicacionBusesFragment = new UbicacionBusesFragment();
+
+        // Infla el archivo xml en el contenedor de la actividad
+
+
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, ubicacionBusesFragment)
+                .commit();
+
+        // Las modificaciones de elementos de la interfaz grafica se generan despues de 1ms
+        // Nota: Se debe esperar un tiempo para inflar el xml, o si no genera error.
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+
+                if (ContextCompat.checkSelfPermission(entorno_principal.this, Manifest.permission.ACCESS_FINE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    // El permiso no se ha concedido, se solicita al usuario
+                    ActivityCompat.requestPermissions(entorno_principal.this,
+                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                            REQUEST_LOCATION_PERMISSION);
+                } else {
+                    // El permiso ya se ha concedido, puedes realizar las operaciones relacionadas con la ubicación
+                    // aquí mismo o en algún otro lugar de tu código.
+                }
+
+                mapView = ubicacionBusesFragment.requireView().findViewById(R.id.mapViewImage);
+                //mapView.onCreate(savedInstanceState);
+                mapView.getMapAsync(entorno_principal.this);
+
+
+
+            }
+        }, 1);*/
+    }
+
 
     // Define los parametros del elemnto que representa googleMaps
     @Override

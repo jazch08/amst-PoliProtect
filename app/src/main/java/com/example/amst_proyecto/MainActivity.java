@@ -8,7 +8,7 @@ import android.os.Handler;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int DELAY_TIME = 4000; // 5 segundos
+    private static final int DELAY_TIME = 4000; // 4 segundos
     private Handler splash;
     private Intent intentLogin;
 

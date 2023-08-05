@@ -4,9 +4,12 @@
     <color name="white">#FFFFFFFF</color>
 
     <color name="fondo">#FF2AD9F7</color>
+    <color name="fondo_claro">#FF58E4FC</color>
     <color name="hint_color">#FF888888</color>
     <color name="Olvidado_contraseña_color">#FF555555</color>
     <color name="boton_google">#FFDDDDDD</color>
     <color name="forgot">#18a5d9</color>
+
+
 
 </resources>

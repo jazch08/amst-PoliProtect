@@ -2,6 +2,9 @@
 <resources>
     <string name="app_name">PoliProtect</string>
 
+    <string name="inicio">Inicio: </string>
+    <string name="fin">Fin: </string>
+
     <string name="bienvenido"><font color="#FFFFFFFF"><b>Bienvenido</b></font></string>
 
     <string name="login"><font color="#FF555555" size="30">Iniciar sesion</font></string>
@@ -13,8 +16,8 @@
     <string name="no_cuenta">¿Aun no tienes una cuenta?</string>
     <string name="registrarse"><u>Registrarse</u></string>
     <string name="mostrar_contraseña">Mostrar</string>
-    <string name="default_web_client_id">default_web_client_id</string>
 
+    <string name="default_web_client_id">906374933031-u51ns6s7t70bt185bqfkqocbmu3qauqc.apps.googleusercontent.com</string>
     <string name="horarios_buses">Horarios de los buses</string>
     <string name="reporte">Reporte</string>
     <string name="cerrar_sesion">Cerrar sesion</string>

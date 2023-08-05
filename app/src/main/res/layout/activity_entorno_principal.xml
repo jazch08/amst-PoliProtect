@@ -48,10 +48,13 @@
             android:layout_height="match_parent"
             android:layout_gravity="start"
             android:background="@color/white"
+            android:clickable="true"
+            android:clipChildren="true"
+            android:focusable="auto"
             app:headerLayout="@layout/menu_principal_headeruser"
             app:itemBackground="@drawable/menu_option_click"
-            app:itemIconTint="@color/black"
-            app:itemTextColor="@color/black" />
+            app:itemIconTint="@color/navigation_item_colors"
+            app:itemTextColor="@color/navigation_item_colors" />
 
 
     </androidx.drawerlayout.widget.DrawerLayout>

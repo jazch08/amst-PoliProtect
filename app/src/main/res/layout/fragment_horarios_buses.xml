@@ -3,12 +3,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".HorrariosBusesFragment">
+    tools:context=".HorariosBusesFragment">
 
     <!-- TODO: Update blank fragment layout -->
-    <TextView
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/idRecycleViewHorarios"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="&quot;Horarios buses&quot;" />
+        android:layout_margin="25dp"
+        android:clickable="true"
+        android:focusable="true" />
 
 </FrameLayout>
