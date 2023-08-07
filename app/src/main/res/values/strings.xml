@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">PoliProtect</string>
 
-    <string name="inicio">Inicio: </string>
+    <string name="hora_salida">Hora de salida: </string>
     <string name="fin">Fin: </string>
 
     <string name="bienvenido"><font color="#FFFFFFFF"><b>Bienvenido</b></font></string>
@@ -18,7 +18,7 @@
     <string name="mostrar_contraseña">Mostrar</string>
 
     <string name="default_web_client_id">906374933031-u51ns6s7t70bt185bqfkqocbmu3qauqc.apps.googleusercontent.com</string>
-    <string name="horarios_buses">Horarios de los buses</string>
+    <string name="rutas_buses">Rutas de los buses</string>
     <string name="reporte">Reporte</string>
     <string name="cerrar_sesion">Cerrar sesion</string>
     <string name="ubicacion_buses">Ubicacion de buses</string>
@@ -30,5 +30,9 @@
     <string name="navigation_drawer_close">navigation_drawer_close</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="no_conexion">Sin conexión a Iternet</string>
+    <string name="reintentar">Reintentar</string>
+    <string name="Mensaje">Conprueba tu conexion Wifi o de datos, para poder continuar</string>
 
 </resources>

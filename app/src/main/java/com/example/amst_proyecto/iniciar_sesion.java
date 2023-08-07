@@ -4,11 +4,19 @@ import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
+import android.net.NetworkRequest;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.method.PasswordTransformationMethod;
@@ -17,13 +25,13 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
@@ -34,19 +42,52 @@ import java.util.HashMap;
 
 
 public class iniciar_sesion extends AppCompatActivity {
-    private static final int RC_SIGN_IN = 9001;
     private GoogleSignInClient mGoogleSignInClient;
     private FirebaseAuth mAuth;
-    private GoogleApiClient mGoogleApiClient;
     private EditText etUsuario;
     CheckBox checkboxShowPassword;
     EditText editTextPassword;
+
+    // Declaracion del Callback que representa la conexion de iternet
+    private ConnectivityManager.NetworkCallback networkCallback;
+    private ConnectivityManager mConnectivityManager;
 
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_iniciar_sesion);
+
+        // Definir la operacion de los estados de conexion de internet
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            networkCallback = new ConnectivityManager.NetworkCallback() {
+                @Override
+                public void onAvailable(@NonNull Network network) {
+                    super.onAvailable(network);
+                    // Esta conectado a internet
+                    Toast.makeText(iniciar_sesion.this, "Conexion Restablecida", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onLost(@NonNull Network network) {
+                    super.onLost(network);
+                    // Se perdió la conexión a Internet
+                    Toast.makeText(iniciar_sesion.this, "No hay conexion", Toast.LENGTH_SHORT).show();
+                }
+            };
+        }
+
+        // Registrar el NetworkCallback
+        mConnectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkRequest request = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            request = new NetworkRequest.Builder()
+                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    .build();
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mConnectivityManager.registerNetworkCallback(request, networkCallback);
+        }
 
         // Declaracion de los elementos de la interfaz grafica
         checkboxShowPassword = findViewById(R.id.idCheckboxShowPassword);
@@ -97,6 +138,12 @@ public class iniciar_sesion extends AppCompatActivity {
         String usuario = etUsuario.getText().toString();
         String contraseña = editTextPassword.getText().toString();
 
+        if(isConectedInternet()){
+
+        } else{
+            Toast.makeText(iniciar_sesion.this, "No hay conexion", Toast.LENGTH_SHORT).show();
+        }
+
         //mAuth.signInWithEmailAndPassword(usuario, contraseña)
         //        .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
         //            @Override
@@ -110,7 +157,11 @@ public class iniciar_sesion extends AppCompatActivity {
     }
 
     public void iniciarSesionGoogle(View v) {
-        resultLauncher.launch(new Intent(mGoogleSignInClient.getSignInIntent()));
+        if(isConectedInternet()){
+            resultLauncher.launch(new Intent(mGoogleSignInClient.getSignInIntent()));
+        } else{
+            Toast.makeText(iniciar_sesion.this, "No hay conexion", Toast.LENGTH_SHORT).show();
+        }
     }
     ActivityResultLauncher<Intent> resultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
         @Override
@@ -158,5 +209,10 @@ public class iniciar_sesion extends AppCompatActivity {
         } else {
             System.out.println("sin registrarse");
         }
+    }
+
+    private boolean isConectedInternet(){
+        NetworkInfo activeNetwork = mConnectivityManager.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 }

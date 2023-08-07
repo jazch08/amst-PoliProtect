@@ -10,39 +10,40 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-public class AdapterItemHorario  extends RecyclerView.Adapter<AdapterItemHorario.ViewHolder>{
-    private List<String> listHora;
+public class AdapterItemRuta extends RecyclerView.Adapter<AdapterItemRuta.ViewHolder>{
+    private List<String> listRutas;
     private OnItemClickListener clickListener;
 
     public interface OnItemClickListener {
-        void onItemHorarioClick(int position);
+        void onItemRutaClick(int position);
     }
 
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.clickListener = listener;
     }
 
-    public AdapterItemHorario(List<String> listHora) {
-        this.listHora = listHora;
+    public AdapterItemRuta(List<String> listRutas) {
+        this.listRutas = listRutas;
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_horario, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_ruta, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        String hora = listHora.get(position);
-        holder.itemTextViewHora.setText(hora);;
+        String ruta = listRutas.get(position);
+
+        holder.itemTextViewRuta.setText(ruta);
 
         holder.itemView.findViewById(R.id.idItemRutaLayout).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (clickListener != null) {
-                    clickListener.onItemHorarioClick(position);
+                    clickListener.onItemRutaClick(position);
                 }
             }
         });
@@ -50,15 +51,15 @@ public class AdapterItemHorario  extends RecyclerView.Adapter<AdapterItemHorario
 
     @Override
     public int getItemCount() {
-        return listHora.size();
+        return listRutas.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        TextView itemTextViewHora;
+        TextView itemTextViewRuta;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            itemTextViewHora = itemView.findViewById(R.id.idItemHora);
+            itemTextViewRuta = itemView.findViewById(R.id.idItemRuta);
 
         }
     }
