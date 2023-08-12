@@ -38,6 +38,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 
+import java.sql.SQLOutput;
 import java.util.HashMap;
 
 
@@ -109,6 +110,12 @@ public class iniciar_sesion extends AppCompatActivity {
         });
 
         mAuth = FirebaseAuth.getInstance();
+
+        // Si ya esta logeado, lo ingresa directamente a la pantalla principal
+        if(mAuth.getCurrentUser()!= null){
+            System.out.println("Estoy logeado");
+            updateUI(mAuth.getCurrentUser());
+        }
 
         // Configurar opciones de inicio de sesión con Google
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
