@@ -1,12 +1,5 @@
 package com.example.amst_proyecto;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -16,6 +9,7 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.net.NetworkRequest;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
@@ -27,24 +21,39 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
-import java.sql.SQLOutput;
 import java.util.HashMap;
 
 
 public class iniciar_sesion extends AppCompatActivity {
     private GoogleSignInClient mGoogleSignInClient;
     private FirebaseAuth mAuth;
+    private FirebaseDatabase database;
+    private FirebaseStorage storage;
     private EditText etUsuario;
     CheckBox checkboxShowPassword;
     EditText editTextPassword;
@@ -110,10 +119,11 @@ public class iniciar_sesion extends AppCompatActivity {
         });
 
         mAuth = FirebaseAuth.getInstance();
+        database = FirebaseDatabase.getInstance();
+        storage = FirebaseStorage.getInstance();
 
         // Si ya esta logeado, lo ingresa directamente a la pantalla principal
-        if(mAuth.getCurrentUser()!= null){
-            System.out.println("Estoy logeado");
+        if (mAuth.getCurrentUser() != null) {
             updateUI(mAuth.getCurrentUser());
         }
 
@@ -129,8 +139,8 @@ public class iniciar_sesion extends AppCompatActivity {
         // Evento de cerrar sesion
         Intent intentCerrarSesion = getIntent();
         String msg = intentCerrarSesion.getStringExtra("msg");
-        if(msg != null){
-            if(msg.equals("cerrarSesion")){
+        if (msg != null) {
+            if (msg.equals("cerrarSesion")) {
                 cerrarSesion();
             }
         }
@@ -145,31 +155,76 @@ public class iniciar_sesion extends AppCompatActivity {
         String usuario = etUsuario.getText().toString();
         String contraseña = editTextPassword.getText().toString();
 
-        if(isConectedInternet()){
+        if (isConectedInternet()) {
+            if (usuario.length() > 0 && contraseña.length() > 0) {
+                mAuth.signInWithEmailAndPassword(usuario, contraseña)
+                        .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                if (task.isSuccessful()) {
+                                    String email = mAuth.getCurrentUser().getEmail().toString();
+                                    String Uid = mAuth.getUid().toString();
+                                    DatabaseReference refDataBase = database.getReference("Data_app/usuarios");
+                                    StorageReference storageRef = storage.getReference("usuarios");
+                                    updateUIEmail(email, Uid, refDataBase, storageRef);
 
-        } else{
-            Toast.makeText(iniciar_sesion.this, "No hay conexion", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(iniciar_sesion.this, "Correo o contraseña invalido", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
+            } else if (usuario.length() > 0 && contraseña.length() <= 0) {
+                Toast.makeText(getApplicationContext(),
+                        "Por favor ingrese su contraseña",
+                        Toast.LENGTH_SHORT).show();
+            } else if (usuario.length() <= 0 && contraseña.length() > 0) {
+                Toast.makeText(getApplicationContext(),
+                        "Por favor ingrese su usuario",
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getApplicationContext(),
+                        "Por favor ingrese su usuario y contraseña",
+                        Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Toast.makeText(iniciar_sesion.this,
+                    "No hay conexion",
+                    Toast.LENGTH_SHORT).show();
         }
 
-        //mAuth.signInWithEmailAndPassword(usuario, contraseña)
-        //        .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-        //            @Override
-        //            public void onComplete(@NonNull Task<AuthResult> task) {
-        //                if (task.isSuccessful()) {
-        //                } else {
-        //                    Toast.makeText(iniciar_sesion.this, "Error al iniciar sesión", Toast.LENGTH_SHORT).show();
-        //                }
-        //            }
-        //        });
+    }
+
+    private void updateUIEmail(String email, String Uid, DatabaseReference refDataBase, StorageReference storageRef){
+        Toast.makeText(iniciar_sesion.this, "Abriendo su perfil", Toast.LENGTH_SHORT).show();
+        refDataBase.child(Uid).child("nombre").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                if (task.isSuccessful()) {
+                    StorageReference storageRefImage = storageRef.child(Uid + ".png");
+                    storageRefImage.getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Uri> taskphoto) {
+
+                            String profileImageUrl = taskphoto.getResult().toString();
+                            String name = String.valueOf(task.getResult().getValue());
+                            updateUI(name,email,profileImageUrl);
+
+
+                        }
+                    });
+                }
+            }
+        });
     }
 
     public void iniciarSesionGoogle(View v) {
-        if(isConectedInternet()){
+        if (isConectedInternet()) {
             resultLauncher.launch(new Intent(mGoogleSignInClient.getSignInIntent()));
-        } else{
+        } else {
             Toast.makeText(iniciar_sesion.this, "No hay conexion", Toast.LENGTH_SHORT).show();
         }
     }
+
     ActivityResultLauncher<Intent> resultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
         @Override
         public void onActivityResult(ActivityResult result) {
@@ -196,7 +251,6 @@ public class iniciar_sesion extends AppCompatActivity {
                         FirebaseUser user = mAuth.getCurrentUser();
                         updateUI(user);
                     } else {
-                        System.out.println("error");
                         updateUI(null);
                     }
                 });
@@ -215,10 +269,22 @@ public class iniciar_sesion extends AppCompatActivity {
             startActivity(intent);
         } else {
             System.out.println("sin registrarse");
+
         }
     }
 
-    private boolean isConectedInternet(){
+    private void updateUI(String name, String email, String urlPhoto) {
+        HashMap<String, String> info_user = new HashMap<String, String>();
+        info_user.put("user_name", name);
+        info_user.put("user_email", email);
+        info_user.put("user_photo", urlPhoto);
+        finish();
+        Intent intent = new Intent(this, entorno_principal.class);
+        intent.putExtra("info_user", info_user);
+        startActivity(intent);
+    }
+
+    private boolean isConectedInternet() {
         NetworkInfo activeNetwork = mConnectivityManager.getActiveNetworkInfo();
         return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }

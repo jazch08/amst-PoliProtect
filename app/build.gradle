@@ -52,6 +52,12 @@ dependencies {
     implementation 'com.google.android.gms:play-services-auth:20.6.0'
     implementation 'com.google.firebase:firebase-auth:22.1.1'
 
+    // Database
+    implementation "com.google.firebase:firebase-database"
+
+    // Storage
+    implementation "com.google.firebase:firebase-storage"
+
     // Para procesa imagenes
     implementation 'com.squareup.picasso:picasso:2.71828'
 
