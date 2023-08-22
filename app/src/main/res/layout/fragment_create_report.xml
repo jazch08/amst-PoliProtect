@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".CreateReportFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="20dp"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.google.android.gms.maps.MapView
+                android:id="@+id/createReportMapView"
+                android:layout_width="match_parent"
+                android:layout_height="380dp"
+                app:liteMode="false"
+                app:mapType="normal"
+                app:uiCompass="false"
+                app:uiRotateGestures="false"
+                app:uiScrollGestures="true"
+                app:uiTiltGestures="false"
+                app:uiZoomControls="true"
+                app:uiZoomGestures="false" />
+        </FrameLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/idRecycleViewSelectReport"
+            android:layout_width="match_parent"
+            android:layout_height="230dp"
+            android:clickable="true"
+            android:focusable="true">
+
+        </androidx.recyclerview.widget.RecyclerView>
+
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/createReportbtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="onClickReport"
+            android:text="@string/reportar"
+            android:textSize="24sp"
+            app:backgroundTint="@color/fondo" />
+    </LinearLayout>
+
+</FrameLayout>

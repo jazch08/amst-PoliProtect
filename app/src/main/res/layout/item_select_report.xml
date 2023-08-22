@@ -1,7 +1,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/idItemRutaLayout"
+    android:id="@+id/idItemSelectReportLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
@@ -22,7 +22,7 @@
         android:layout_width="100dp"
         android:layout_height="50dp"
         android:layout_weight="2"
-        app:srcCompat="@drawable/bus_icon" />
+        app:srcCompat="@drawable/select_report_icon" />
 
     <Space
         android:layout_width="wrap_content"
@@ -30,7 +30,7 @@
         android:layout_weight="1" />
 
     <TextView
-        android:id="@+id/idItemRuta"
+        android:id="@+id/idItemSelectReport"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
