@@ -64,4 +64,7 @@ dependencies {
     // Libreria para mapas
     implementation 'com.google.android.gms:play-services-maps:18.1.0'
 
+    // Libreria para seleccionar o tomar foto
+    implementation 'com.github.dhaval2404:imagepicker:2.1'
+
 }
