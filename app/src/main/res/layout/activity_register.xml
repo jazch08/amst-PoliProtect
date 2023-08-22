@@ -70,7 +70,7 @@
                 android:layout_height="wrap_content"
                 android:labelFor="@id/txt_nombre"
                 android:text="Nombre Completo"
-                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                 android:textColor="@color/Olvidado_contraseña_color" />
 
             <EditText
@@ -97,7 +97,7 @@
                 android:layout_height="wrap_content"
                 android:labelFor="@id/txt_correo"
                 android:text="Correo"
-                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                 android:textColor="@color/Olvidado_contraseña_color" />
 
             <EditText
@@ -113,7 +113,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="40dp"
+            android:layout_marginBottom="25dp"
             android:orientation="vertical">
 
             <TextView
@@ -122,7 +122,7 @@
                 android:layout_height="wrap_content"
                 android:labelFor="@id/txt_contrasena"
                 android:text="Contraseña"
-                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
                 android:textColor="@color/Olvidado_contraseña_color" />
 
             <EditText
@@ -148,11 +148,12 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_marginTop="25dp"
             android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/textView11"
-                android:layout_width="1dp"
+                android:layout_width="221dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="¿Ya tienes cuenta?"
@@ -163,6 +164,8 @@
                 android:layout_width="100dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:clickable="true"
+                android:onClick="goIniciarSesion"
                 android:text="Inicia Sesión"
                 android:textColor="@color/forgot"
                 android:textColorHighlight="@color/forgot"

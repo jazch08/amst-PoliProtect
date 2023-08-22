@@ -1,8 +1,8 @@
 package com.example.amst_proyecto.data;
 
 public class Usuario {
-    private String nombre;
-    private String photo;
+    public String nombre;
+    public String photo;
 
     public Usuario() {
     }
