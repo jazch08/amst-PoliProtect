@@ -340,22 +340,29 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
         HashMap<String, String> info_user = (HashMap<String, String>) intent.getSerializableExtra("info_user");
         //System.out.println("Informacion"+ info_user);
 
+        // Tipo de usuario
+        String userType = info_user.get("user_type");
+
         // Declaracion de elementos
         TextView txt_name = headerView.findViewById(R.id.idUserName);
         TextView txt_email = headerView.findViewById(R.id.idUserEmail);
         ImageView imv_photo = headerView.findViewById(R.id.idProfileImage);
+        TextView txt_typeUser = headerView.findViewById(R.id.idTextViewRol);
 
         // Definir los elementos del usuario
         txt_name.setText(info_user.get("user_name"));
         txt_email.setText(info_user.get("user_email"));
         String photo = info_user.get("user_photo");
         Picasso.get().load(photo).into(imv_photo);
+        txt_typeUser.setText(userType);
 
+
+        System.out.println(userType);
         // Dependiendo del rol del usuario se infla el menú correspondiente
-        if (true) {
-            getMenuInflater().inflate(R.menu.menu_principal_administrador, menuNav);
-        } else {
+        if (userType.equals("Estudiante")) {
             getMenuInflater().inflate(R.menu.menu_principal_estudiante, menuNav);
+        } else {
+            getMenuInflater().inflate(R.menu.menu_principal_administrador, menuNav);
         }
     }
 

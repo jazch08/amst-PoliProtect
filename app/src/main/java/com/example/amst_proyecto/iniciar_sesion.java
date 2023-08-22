@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -53,7 +54,6 @@ public class iniciar_sesion extends AppCompatActivity {
     private GoogleSignInClient mGoogleSignInClient;
     private FirebaseAuth mAuth;
     private FirebaseDatabase database;
-    private FirebaseStorage storage;
     private EditText etUsuario;
     CheckBox checkboxShowPassword;
     EditText editTextPassword;
@@ -120,11 +120,21 @@ public class iniciar_sesion extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
-        storage = FirebaseStorage.getInstance();
 
         // Si ya esta logeado, lo ingresa directamente a la pantalla principal
         if (mAuth.getCurrentUser() != null) {
-            updateUI(mAuth.getCurrentUser());
+            SharedPreferences sp = getSharedPreferences("login_admin", Context.MODE_PRIVATE);
+            String userType = sp.getString("userType","");
+
+            // Comprueba se es administrador, obteniendo el tipo de usuario guardado en cache
+            if (userType.equals("Administrador")){
+                String name = sp.getString("nombre","Nombre sin cargar");
+                String noPhoto = "https://firebasestorage.googleapis.com/v0/b/poliprotect-6b93c.appspot.com/o/usuarios%2FnoPhoto.png?alt=media&token=4f1b180a-7394-4bb7-9750-dfcdbb58c514";
+                String photo = sp.getString("photo",noPhoto);
+                updateUI(name,mAuth.getCurrentUser().getEmail(),photo);
+            }
+            else
+                updateUI(mAuth.getCurrentUser());
         }
 
         // Configurar opciones de inicio de sesión con Google
@@ -165,8 +175,7 @@ public class iniciar_sesion extends AppCompatActivity {
                                     String email = mAuth.getCurrentUser().getEmail().toString();
                                     String Uid = mAuth.getUid().toString();
                                     DatabaseReference refDataBase = database.getReference("Data_app/usuarios");
-                                    StorageReference storageRef = storage.getReference("usuarios");
-                                    updateUIEmail(email, Uid, refDataBase, storageRef);
+                                    updateUIEmail(email, Uid, refDataBase);
 
                                 } else {
                                     Toast.makeText(iniciar_sesion.this, "Correo o contraseña invalido", Toast.LENGTH_SHORT).show();
@@ -194,24 +203,15 @@ public class iniciar_sesion extends AppCompatActivity {
 
     }
 
-    private void updateUIEmail(String email, String Uid, DatabaseReference refDataBase, StorageReference storageRef){
+    private void updateUIEmail(String email, String Uid, DatabaseReference refDataBase){
         Toast.makeText(iniciar_sesion.this, "Abriendo su perfil", Toast.LENGTH_SHORT).show();
-        refDataBase.child(Uid).child("nombre").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+        refDataBase.child(Uid).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DataSnapshot> task) {
                 if (task.isSuccessful()) {
-                    StorageReference storageRefImage = storageRef.child(Uid + ".png");
-                    storageRefImage.getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Uri> taskphoto) {
-
-                            String profileImageUrl = taskphoto.getResult().toString();
-                            String name = String.valueOf(task.getResult().getValue());
-                            updateUI(name,email,profileImageUrl);
-
-
-                        }
-                    });
+                    String name = String.valueOf(task.getResult().child("nombre").getValue());
+                    String image = String.valueOf(task.getResult().child("photo").getValue());
+                    updateUI(name,email,image);
                 }
             }
         });
@@ -263,6 +263,12 @@ public class iniciar_sesion extends AppCompatActivity {
             info_user.put("user_name", user.getDisplayName());
             info_user.put("user_email", user.getEmail());
             info_user.put("user_photo", String.valueOf(user.getPhotoUrl()));
+            System.out.println(user.getDisplayName());
+            info_user.put("user_type", "Estudiante");
+            SharedPreferences sp = getSharedPreferences("login_admin", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sp.edit();
+            editor.putString("userType", "Estudiante");
+            editor.commit();
             finish();
             Intent intent = new Intent(this, entorno_principal.class);
             intent.putExtra("info_user", info_user);
@@ -278,6 +284,13 @@ public class iniciar_sesion extends AppCompatActivity {
         info_user.put("user_name", name);
         info_user.put("user_email", email);
         info_user.put("user_photo", urlPhoto);
+        info_user.put("user_type", "Administrador");
+        SharedPreferences sp = getSharedPreferences("login_admin", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putString("userType", "Administrador");
+        editor.putString("nombre", name);
+        editor.putString("photo", urlPhoto);
+        editor.commit();
         finish();
         Intent intent = new Intent(this, entorno_principal.class);
         intent.putExtra("info_user", info_user);
@@ -287,5 +300,11 @@ public class iniciar_sesion extends AppCompatActivity {
     private boolean isConectedInternet() {
         NetworkInfo activeNetwork = mConnectivityManager.getActiveNetworkInfo();
         return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
+
+    public void registrarse(){
+        Intent intent = new Intent(this, Register.class);
+
+        startActivity(intent);
     }
 }
