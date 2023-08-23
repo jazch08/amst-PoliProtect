@@ -260,15 +260,17 @@ public class entorno_principal extends AppCompatActivity implements AdapterItemH
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 System.out.println("-----------------------------------");
+                ArrayList<Coordenada> listadoCoordenadas= new ArrayList<>();
                 for (DataSnapshot data : dataSnapshot.getChildren()){
-                    System.out.println(data.getKey());
-                    System.out.println(data.getValue());
                     for (DataSnapshot dataU : data.getChildren()){
-
+                        String nombre = data.getKey() + " " +  dataU.child("horario").getValue();
+                        double latitude = Double.parseDouble(dataU.child("posicion").child("latitud").getValue().toString());
+                        double longitude = Double.parseDouble(dataU.child("posicion").child("longitud").getValue().toString());
+                        Coordenada coordenada = new Coordenada(latitude,longitude,nombre);
+                        listadoCoordenadas.add(coordenada);
                     }
                 }
-                System.out.println(dataSnapshot.getKey());
-                System.out.println(dataSnapshot.getValue());
+                ubicacionesBusesMapaFragment.setNombreArrayList(listadoCoordenadas);
                 System.out.println("-----------------------------------");
             }
 
@@ -281,10 +283,10 @@ public class entorno_principal extends AppCompatActivity implements AdapterItemH
         listadoBusesRef.addValueEventListener(postListener);
 
 
-        Coordenada coordenada = new Coordenada(-2.19616,-79.88621,"Bus Ruta N");
-        ArrayList<Coordenada> listadoCoordenadas= new ArrayList<>();
-        listadoCoordenadas.add(coordenada);
-        ubicacionesBusesMapaFragment.setNombreArrayList(listadoCoordenadas);
+        //Coordenada coordenada = new Coordenada(-2.19616,-79.88621,"Bus Ruta N");
+        //ArrayList<Coordenada> listadoCoordenadas= new ArrayList<>();
+        //listadoCoordenadas.add(coordenada);
+        //ubicacionesBusesMapaFragment.setNombreArrayList(listadoCoordenadas);
         //ubicacionesBusesMapaFragment.loadDataPosition(-2.19616, -79.88621,"Bus Ruta N");
 
         // Infla el archivo xml en el contenedor de la actividad

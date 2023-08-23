@@ -39,4 +39,13 @@ public class Coordenada {
     public void setNombreBus(String nombreBus) {
         this.nombreBus = nombreBus;
     }
+
+    @Override
+    public String toString() {
+        return "Coordenada{" +
+                "latitude=" + latitude +
+                ", longitude=" + longitude +
+                ", nombreBus='" + nombreBus + '\'' +
+                '}';
+    }
 }

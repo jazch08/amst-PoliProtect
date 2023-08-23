@@ -15,6 +15,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
@@ -31,6 +32,9 @@ public class UbicacionesBusesMapFragment extends Fragment implements OnMapReadyC
     private ArrayList<Coordenada> coordenadas;
 
     private ArrayList<LatLng> locations = new ArrayList<LatLng>();
+
+    private ArrayList<Marker> tmpMarkers = new ArrayList<>();
+    private ArrayList<Marker> Markers = new ArrayList<>();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -55,6 +59,13 @@ public class UbicacionesBusesMapFragment extends Fragment implements OnMapReadyC
     }
 
     @Override
+    public String toString() {
+        return "UbicacionesBusesMapFragment{" +
+                "coordenadas=" + coordenadas +
+                '}';
+    }
+
+    @Override
     public void onMapReady(GoogleMap map) {
         locations.clear();
         map.getUiSettings().setMapToolbarEnabled(false); // Deshabilita la barra de herramientas
@@ -67,13 +78,12 @@ public class UbicacionesBusesMapFragment extends Fragment implements OnMapReadyC
 
         // Agregar un marcador en una ubicación específica, por ejemplo:
         for (Coordenada coordenada : coordenadas){
+            System.out.println(coordenada);
             LatLng location = new LatLng(coordenada.getLatitude(), coordenada.getLongitude());
             locations.add(location);
             // Mover la cámara al marcador
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 30));
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 10));
         }
-
-
 
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
@@ -82,17 +92,27 @@ public class UbicacionesBusesMapFragment extends Fragment implements OnMapReadyC
                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                     @Override
                     public void run() {
-                        for(int i=0 ; i>locations.size(); i++){
+
+                        for(Marker marker : Markers){
+                            marker.remove();
+                        }
+
+                        for(int i=0 ; i<locations.size(); i++){
                             MarkerOptions markerOptions = new MarkerOptions()
                                     .position(locations.get(i))
                                     .title(coordenadas.get(i).getNombreBus());
-                            map.addMarker(markerOptions);
+                            System.out.println("********************************************");
+                            System.out.println(markerOptions.getPosition().latitude);
+                            System.out.println(markerOptions.getPosition().longitude);
+                            System.out.println("********************************************");
+                            tmpMarkers.add(map.addMarker(markerOptions));
                         }
-
+                        Markers.clear();
+                        Markers.addAll(tmpMarkers);
                     }
                 });
             }
-        }, 500);
+        }, 1500);
     }
 
     @Override
