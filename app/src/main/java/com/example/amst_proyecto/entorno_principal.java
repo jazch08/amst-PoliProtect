@@ -1,5 +1,7 @@
 package com.example.amst_proyecto;
 
+import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -26,6 +28,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,6 +36,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.amst_proyecto.data.Coordenada;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -41,6 +45,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -56,6 +65,8 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
     private ActionBarDrawerToggle drawerToggle;
     private View headerView;
     private Menu menuNav;
+    private FirebaseDatabase firebaseDatabase;
+    private DatabaseReference databaseRef;
 
     // Declaracion del Callback que representa la conexion de iternet
     private ConnectivityManager.NetworkCallback networkCallback;
@@ -109,6 +120,12 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
         headerView = navigationView.getHeaderView(0);
         menuNav = navigationView.getMenu();
 
+        // Obtener instancia de BD
+        firebaseDatabase = FirebaseDatabase.getInstance();
+
+        // Obtener referencia de BD
+        databaseRef = firebaseDatabase.getReference("Data_app");
+
         drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close);
 
         // Habilitar el ícono del menú en la barra de acción
@@ -143,7 +160,7 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
                         inflarActRutaBuses();
                     }
                 } else if (idItem == R.id.idAdminVisualizarBuses) {
-
+                    inflarUbicacionesBusesMapa();
                 } else if (idItem == R.id.idAdminReporteMap) {
 
                 } else if (idItem == R.id.idEditarHorarios) {
@@ -211,6 +228,8 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
             // aquí mismo o en algún otro lugar de tu código.
         }
 
+
+
         ubicacionBusesFragment.loadDataPosition(-2.19616, -79.88621,"Bus Ruta N");
 
         // Infla el archivo xml en el contenedor de la actividad
@@ -218,6 +237,61 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
         fragmentManager.beginTransaction()
                 .replace(R.id.fragmentContainer, ubicacionBusesFragment)
                 .commit();
+    }
+
+    private void inflarUbicacionesBusesMapa(){
+        // Declara el objeto que representa el archivo xml que se piensa inflar
+        UbicacionesBusesMapFragment ubicacionesBusesMapaFragment = new UbicacionesBusesMapFragment();
+
+        // Solicita el permiso para solicitar la ubicacion del dispositivo y usa googlemaps si es que no lo tiene
+        if (ContextCompat.checkSelfPermission(entorno_principal.this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // El permiso no se ha concedido, se solicita al usuario
+            ActivityCompat.requestPermissions(entorno_principal.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_LOCATION_PERMISSION);
+        }
+        DatabaseReference listadoBusesRef = databaseRef.child("listado_buses");
+
+
+
+        ValueEventListener postListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                System.out.println("-----------------------------------");
+                for (DataSnapshot data : dataSnapshot.getChildren()){
+                    System.out.println(data.getKey());
+                    System.out.println(data.getValue());
+                    for (DataSnapshot dataU : data.getChildren()){
+
+                    }
+                }
+                System.out.println(dataSnapshot.getKey());
+                System.out.println(dataSnapshot.getValue());
+                System.out.println("-----------------------------------");
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Getting Post failed, log a message
+                Log.w(TAG, "loadPost:onCancelled", databaseError.toException());
+            }
+        };
+        listadoBusesRef.addValueEventListener(postListener);
+
+
+        Coordenada coordenada = new Coordenada(-2.19616,-79.88621,"Bus Ruta N");
+        ArrayList<Coordenada> listadoCoordenadas= new ArrayList<>();
+        listadoCoordenadas.add(coordenada);
+        ubicacionesBusesMapaFragment.setNombreArrayList(listadoCoordenadas);
+        //ubicacionesBusesMapaFragment.loadDataPosition(-2.19616, -79.88621,"Bus Ruta N");
+
+        // Infla el archivo xml en el contenedor de la actividad
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, ubicacionesBusesMapaFragment)
+                .commit();
+
     }
 
     // Definir el evenbto onClick para el item de AdapterRuta
