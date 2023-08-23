@@ -240,36 +240,6 @@ public class entorno_principal extends AppCompatActivity implements AdapterItemH
 
     }
 
-    // Definir el evento onClick para el item de AdapterHorario
-    @Override
-    public void onItemHorarioClick(int position) {
-        // Mensaje
-        Toast.makeText(this, "Elemento en la posición " + position + " clickeado", Toast.LENGTH_SHORT).show();
-
-        // Declara el objeto que representa el archivo xml que se piensa inflar
-        UbicacionBusesFragment ubicacionBusesFragment = new UbicacionBusesFragment();
-
-        // Solicita el permiso para solicitar la ubicacion del dispositivo y usa googlemaps
-        if (ContextCompat.checkSelfPermission(entorno_principal.this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            // El permiso no se ha concedido, se solicita al usuario
-            ActivityCompat.requestPermissions(entorno_principal.this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    REQUEST_LOCATION_PERMISSION);
-        } else {
-            // El permiso ya se ha concedido, puedes realizar las operaciones relacionadas con la ubicación
-            // aquí mismo o en algún otro lugar de tu código.
-        }
-
-        ubicacionBusesFragment.loadDataPosition(-2.19616, -79.88621,"Bus Ruta N");
-
-        // Infla el archivo xml en el contenedor de la actividad
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, ubicacionBusesFragment)
-                .commit();
-    }
-
     private void inflarUbicacionesBusesMapa(){
         // Declara el objeto que representa el archivo xml que se piensa inflar
         UbicacionesBusesMapFragment ubicacionesBusesMapaFragment = new UbicacionesBusesMapFragment();
@@ -596,6 +566,25 @@ public class entorno_principal extends AppCompatActivity implements AdapterItemH
 
                         latitudeBusSelected = Double.parseDouble(latitudeSTR);
                         longitudeBusSelected = Double.parseDouble(longitudeSTR);
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        System.out.println(error.toException());
+                    }
+                });
+    }
+
+    void loadDBSelectReport(){
+        db_reference.child("tipos_indicentes")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        listSelectReport.clear();
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            listSelectReport.add(snapshot.getKey().toString());
+                        }
+                        adaptarSelectReport.notifyDataSetChanged();
                     }
 
                     @Override
