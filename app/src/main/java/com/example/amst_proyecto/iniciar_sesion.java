@@ -302,7 +302,7 @@ public class iniciar_sesion extends AppCompatActivity {
         return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 
-    public void registrarse(){
+    public void registrarse(View view){
         Intent intent = new Intent(this, Register.class);
 
         startActivity(intent);

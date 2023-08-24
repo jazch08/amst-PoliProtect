@@ -1,5 +1,7 @@
 package com.example.amst_proyecto;
 
+import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -26,6 +28,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,6 +36,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.amst_proyecto.data.Coordenada;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -41,17 +48,27 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Collections;
 
-
-public class entorno_principal extends AppCompatActivity implements OnMapReadyCallback, AdapterItemHorario.OnItemClickListener, AdapterItemRuta.OnItemClickListener,AdapterItemReporte.OnItemClickListener {
+public class entorno_principal extends AppCompatActivity implements AdapterItemHorario.OnItemClickListener, AdapterItemRuta.OnItemClickListener, AdapterItemSelectReport.OnItemClickListener,AdapterItemReporte.OnItemClickListener {
 
     // Declaracion de los elementos relacionado a la interfaz grafica
     private Toolbar toolbar;
@@ -60,6 +77,8 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
     private ActionBarDrawerToggle drawerToggle;
     private View headerView;
     private Menu menuNav;
+    private FirebaseDatabase firebaseDatabase;
+    private DatabaseReference databaseRef;
 
     // Declaracion del Callback que representa la conexion de iternet
     private ConnectivityManager.NetworkCallback networkCallback;
@@ -73,7 +92,54 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
     private static final int REQUEST_LOCATION_PERMISSION = 1;
 
     // Declaracion de Adaptadores
-    private AdapterItemHorario adapterHorario;
+    private AdapterItemHorario adpaterHorarios;
+    private AdapterItemRuta adpaterRutas;
+
+    private AdapterItemReporte adpaterReportes;
+    private AdapterItemSelectReport adaptarSelectReport;
+
+    // Referencia de la base de datos
+    DatabaseReference db_reference;
+
+    // Listas de elementos de la base de datos para la creacion de reporte
+    List<String> listRutas = new ArrayList<>();
+    List<String> listHoras = new ArrayList<>();
+    List<String> listRutaBuses = new ArrayList<>();
+    List<String> listSelectReport = new ArrayList<>();
+
+    List<String> listReportes = new ArrayList<>();
+
+
+    // Variables auxiliares para la creacion de reporte
+    Boolean isReported = false;
+    String rutaSelected = null;
+    String busSelected = null;
+    String hourBusSelected = null;
+    String reportSelected = null;
+    double latitudeBusSelected;
+    double longitudeBusSelected;
+
+    String reporteSelected = null;
+
+    //Son variables globales para confirmar reporte
+    String strUrlFoto = null;
+    String strLatitudReporte = null;
+    String strLongitudReporte = null;
+    String strTipoReporte = null;
+    String strHoraReporte = null;
+    String strFechaReporte = null;
+    String strConfiramdoReporte = null;
+
+    String strRutaReporte = null;
+
+    String strRutaReporteOriginal = null;
+
+    String strBusReporte = null;
+
+    String strNombreReporteSeleccionado = null;
+    String strHorarioReporte = null;
+
+    String strMatriculaBusReporte = null;
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -113,6 +179,12 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
         headerView = navigationView.getHeaderView(0);
         menuNav = navigationView.getMenu();
 
+        // Obtener instancia de BD
+        firebaseDatabase = FirebaseDatabase.getInstance();
+
+        // Obtener referencia de BD
+        databaseRef = firebaseDatabase.getReference("Data_app");
+
         drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close);
 
         // Habilitar el ícono del menú en la barra de acción
@@ -125,6 +197,9 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
 
         // Carga los elementos del usuario en el menu
         loadDataUser();
+
+        // Inicializa la referencia de la base de datos
+        db_reference = FirebaseDatabase.getInstance().getReference().child("Data_app");
 
         if(savedInstanceState == null){
             if(isConectedInternet()){
@@ -147,7 +222,7 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
                         inflarActRutaBuses();
                     }
                 } else if (idItem == R.id.idAdminVisualizarBuses) {
-
+                    inflarUbicacionesBusesMapa();
                 } else if (idItem == R.id.idAdminReporteMap) {
 
                 } else if (idItem == R.id.idEditarHorarios) {
@@ -198,12 +273,70 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
 
     }
 
+    private void inflarUbicacionesBusesMapa(){
+        // Declara el objeto que representa el archivo xml que se piensa inflar
+        UbicacionesBusesMapFragment ubicacionesBusesMapaFragment = new UbicacionesBusesMapFragment();
 
+        // Solicita el permiso para solicitar la ubicacion del dispositivo y usa googlemaps si es que no lo tiene
+        if (ContextCompat.checkSelfPermission(entorno_principal.this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // El permiso no se ha concedido, se solicita al usuario
+            ActivityCompat.requestPermissions(entorno_principal.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_LOCATION_PERMISSION);
+        }
+        DatabaseReference listadoBusesRef = databaseRef.child("listado_buses");
+
+
+
+        ValueEventListener postListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                System.out.println("-----------------------------------");
+                ArrayList<Coordenada> listadoCoordenadas= new ArrayList<>();
+                for (DataSnapshot data : dataSnapshot.getChildren()){
+                    for (DataSnapshot dataU : data.getChildren()){
+                        String nombre = data.getKey() + " " +  dataU.child("horario").getValue();
+                        double latitude = Double.parseDouble(dataU.child("posicion").child("latitud").getValue().toString());
+                        double longitude = Double.parseDouble(dataU.child("posicion").child("longitud").getValue().toString());
+                        Coordenada coordenada = new Coordenada(latitude,longitude,nombre);
+                        listadoCoordenadas.add(coordenada);
+                    }
+                }
+                ubicacionesBusesMapaFragment.setNombreArrayList(listadoCoordenadas);
+                System.out.println("-----------------------------------");
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Getting Post failed, log a message
+                Log.w(TAG, "loadPost:onCancelled", databaseError.toException());
+            }
+        };
+        listadoBusesRef.addValueEventListener(postListener);
+
+
+        //Coordenada coordenada = new Coordenada(-2.19616,-79.88621,"Bus Ruta N");
+        //ArrayList<Coordenada> listadoCoordenadas= new ArrayList<>();
+        //listadoCoordenadas.add(coordenada);
+        //ubicacionesBusesMapaFragment.setNombreArrayList(listadoCoordenadas);
+        //ubicacionesBusesMapaFragment.loadDataPosition(-2.19616, -79.88621,"Bus Ruta N");
+
+        // Infla el archivo xml en el contenedor de la actividad
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, ubicacionesBusesMapaFragment)
+                .commit();
+
+    }
 
     // Definir el evenbto onClick para el item de AdapterRuta
     public void onItemRutaClick(int position) {
+        // Busca el nombre de la ruta en la lista
+        rutaSelected = listRutas.get(position);
+
         // Mensaje que indique el objeto seleccionado
-        Toast.makeText(this, "Elemento en la posición " + position + " clickeado", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "Elemento en la posición " + position + " clickeado", Toast.LENGTH_SHORT).show();
 
         // Definir el titulo de la toolbar
         toolbar.setTitle("Horarios de la ruta");
@@ -233,21 +366,11 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
                         LinearLayoutManager layoutManager = new LinearLayoutManager(entorno_principal.this);
                         recyclerViewHorario.setLayoutManager(layoutManager);
 
-                        // Lista de los horarios de cada bus (Lista de ejemplo)
-                        List<String> horas = new ArrayList<>();
-                        horas.add("14:00");
-                        horas.add("16:00");
-                        horas.add("20:00");
-                        horas.add("16:00");
-                        horas.add("20:00");
-
                         // Construccion del adptador para cargar los elementos a cada item
-
-
-                        AdapterItemHorario adpaterHorarios;
-                        adpaterHorarios = new AdapterItemHorario(horas);
+                        adpaterHorarios = new AdapterItemHorario(listHoras);
                         adpaterHorarios.setOnItemClickListener(entorno_principal.this);
                         recyclerViewHorario.setAdapter(adpaterHorarios);
+                        loadDBHourRoute(rutaSelected);
                     }
                 });
             }
@@ -258,10 +381,17 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
     @Override
     public void onItemHorarioClick(int position) {
         // Mensaje
-        Toast.makeText(this, "Elemento en la posición " + position + " clickeado", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "Elemento en la posición " + position + " clickeado", Toast.LENGTH_SHORT).show();
+
+        // Adquiere el bus y el horario selecionado
+        busSelected = listRutaBuses.get(position);
+        hourBusSelected = listHoras.get(position);
+
+        // Definir el titulo de la toolbar
+        toolbar.setTitle("Reportar "+rutaSelected+" "+hourBusSelected);
 
         // Declara el objeto que representa el archivo xml que se piensa inflar
-        UbicacionBusesFragment ubicacionBusesFragment = new UbicacionBusesFragment();
+        CreateReportFragment createReportFragment = new CreateReportFragment();
 
         // Solicita el permiso para solicitar la ubicacion del dispositivo y usa googlemaps
         if (ContextCompat.checkSelfPermission(entorno_principal.this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -270,78 +400,59 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
             ActivityCompat.requestPermissions(entorno_principal.this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     REQUEST_LOCATION_PERMISSION);
-        } else {
-            // El permiso ya se ha concedido, puedes realizar las operaciones relacionadas con la ubicación
-            // aquí mismo o en algún otro lugar de tu código.
-        }
+        } else { }
 
-        ubicacionBusesFragment.loadDataPosition(-2.19616, -79.88621,"Bus Ruta N");
+        loadDBPosition(rutaSelected, busSelected);
+
+        createReportFragment.loadDataPosition(latitudeBusSelected, longitudeBusSelected,rutaSelected+" "+hourBusSelected);
 
         // Infla el archivo xml en el contenedor de la actividad
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, ubicacionBusesFragment)
+                .replace(R.id.fragmentContainer, createReportFragment)
                 .commit();
-    }
 
-    // Define los parametros del elemnto que representa googleMaps
-    @Override
-    public void onMapReady(GoogleMap map) {
+        // Las modificaciones de elementos de la interfaz grafica se generan despues de 1ms
+        // Nota: Se debe esperar un tiempo para inflar el xml, o si no genera error.
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
 
-        map.getUiSettings().setMapToolbarEnabled(false); // Deshabilita la barra de herramientas
-        map.getUiSettings().setZoomControlsEnabled(true); // Deshabilita los controles de zoom
-        map.setBuildingsEnabled(false); // Deshabilita los edificios en 3D
-        map.setIndoorEnabled(false); // Deshabilita la vista interior
+                        // Se implementa los elementos para el recycleView, en este caso los horarios
+                        RecyclerView recyclerViewSelectReport;
+                        recyclerViewSelectReport = createReportFragment.requireView().findViewById(R.id.idRecycleViewSelectReport);
+                        LinearLayoutManager layoutManager = new LinearLayoutManager(entorno_principal.this);
+                        recyclerViewSelectReport.setLayoutManager(layoutManager);
 
-        // Configurar opciones del mapa, por ejemplo:
-        map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-
-        // Agregar un marcador en una ubicación específica, por ejemplo:
-        LatLng location = new LatLng(-2.19616, -79.88621);
-        MarkerOptions markerOptions = new MarkerOptions()
-                .position(location)
-                .title("Guayaquil");
-        map.addMarker(markerOptions);
-
-        // Mover la cámara al marcador
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 14));
-
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (mapView != null) {
-            mapView.onResume();
-        }
+                        // Construccion del adptador para cargar los elementos a cada item
+                        adaptarSelectReport = new AdapterItemSelectReport(listSelectReport);
+                        adaptarSelectReport.setOnItemClickListener(entorno_principal.this);
+                        recyclerViewSelectReport.setAdapter(adaptarSelectReport);
+                        loadDBSelectReport();
+                    }
+                });
+            }
+        }, 1);
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        if (mapView != null) {
-            mapView.onPause();
-        }
-    }
+    public void onItemSelectReportClick(int position){
+        // Mensaje
+        //Toast.makeText(this, "Elemento en la posición " + position + " clickeado", Toast.LENGTH_SHORT).show();
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+        // Indica que se ha seleccionado un reporte posible
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            mConnectivityManager.unregisterNetworkCallback(networkCallback);
-        }
+        reportSelected = listSelectReport.get(position).toString();
+        if (reportSelected != null){
+            isReported = true;
 
-        if (mapView != null) {
-            mapView.onDestroy();
-        }
-    }
+            adaptarSelectReport.isSelected(true, position);
 
-    @Override
-    public void onLowMemory() {
-        super.onLowMemory();
-        if (mapView != null) {
-            mapView.onLowMemory();
+            adaptarSelectReport.notifyDataSetChanged();
         }
     }
 
@@ -391,7 +502,7 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
         return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 
-    // Este codigo permite definir los elemntos para la opcion rutas buses en la interfaza grafica
+    // Este codigo permite definir los elementos para la opcion rutas buses en la interfaza grafica
     private void inflarActRutaBuses(){
         // Definir el titulo de la toolbar
         toolbar.setTitle("Rutas de los Buses");
@@ -414,6 +525,12 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                     @Override
                     public void run() {
+                        // Se resetea las variables
+                        isReported = false;
+                        rutaSelected = null;
+                        busSelected = null;
+                        hourBusSelected = null;
+                        reportSelected = null;
 
                         // Se implementa los elementos para el recycleView, en este caso los horarios
                         RecyclerView recyclerViewRuta;
@@ -421,27 +538,99 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
                         LinearLayoutManager layoutManager = new LinearLayoutManager(entorno_principal.this);
                         recyclerViewRuta.setLayoutManager(layoutManager);
 
-                        // Lista de ejemplo para comprobar el codigo realizado
-                        List<String> rutas = new ArrayList<>();
-                        rutas.add("Ruta 1");
-                        rutas.add("Ruta 2");
-                        rutas.add("Ruta 3");
-                        rutas.add("Ruta 4");
-                        rutas.add("Ruta 5");
-                        rutas.add("Ruta 6");
-
                         // Construccion del adptador para cargar los elementos a cada item
-                        AdapterItemRuta adpaterRutas;
-                        adpaterRutas = new AdapterItemRuta(rutas);
+                        adpaterRutas = new AdapterItemRuta(listRutas);
                         adpaterRutas.setOnItemClickListener(entorno_principal.this);
                         recyclerViewRuta.setAdapter(adpaterRutas);
+                        loadDBRoutes();
                     }
                 });
             }
         }, 1);
+
     }
 
-    //
+    // Permite cargar las rutas de la base de datos
+    void loadDBRoutes() {
+        db_reference.child("listado_buses")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        listRutas.clear();
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            listRutas.add(snapshot.getKey().toString());
+                        }
+                        adpaterRutas.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        System.out.println(error.toException());
+                    }
+                });
+    }// Permite cargar los horarios de la base de datos
+    void loadDBHourRoute(String routeSelected){
+        db_reference.child("listado_buses").child(routeSelected)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        listHoras.clear();
+                        listRutaBuses.clear();
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            listHoras.add(snapshot.child("horario").getValue().toString());
+                            listRutaBuses.add(snapshot.getKey().toString());
+                        }
+                        adpaterHorarios.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        System.out.println(error.toException());
+                    }
+                });
+    }
+
+    // Permite obtener la posicion para generar el reporte
+    void loadDBPosition(String routeSelected, String busSelected){
+        db_reference.child("listado_buses").child(routeSelected).child(busSelected)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        String latitudeSTR = dataSnapshot.child("posicion").child("latitud").getValue().toString();
+                        String longitudeSTR = dataSnapshot.child("posicion").child("longitud").getValue().toString();
+
+                        latitudeBusSelected = Double.parseDouble(latitudeSTR);
+                        longitudeBusSelected = Double.parseDouble(longitudeSTR);
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        System.out.println(error.toException());
+                    }
+                });
+    }
+
+    void loadDBSelectReport(){
+        db_reference.child("tipos_indicentes")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        listSelectReport.clear();
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            listSelectReport.add(snapshot.getKey().toString());
+                        }
+                        adaptarSelectReport.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        System.out.println(error.toException());
+                    }
+                });
+    }
+
+    // Permite obtener las situaciones posibles a reportar
+
     public void onClickReintentar(View v){
 
         if(isConectedInternet()){
@@ -450,6 +639,66 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
         }
         else{
             Toast.makeText(this, "No hay Conexion", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Describe el evento del boton del reporte
+    public void onClickReport(View v){
+        if(isReported){
+            // Obtén la fecha y hora actual
+            Calendar calendar = Calendar.getInstance();
+            Date currentDate = calendar.getTime();
+
+            // Define el formato deseado para la fecha y la hora
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+
+            // Convierte la fecha y la hora en cadenas
+            String formattedDate = dateFormat.format(currentDate);
+            String formattedTime = timeFormat.format(currentDate);
+
+            String date = formattedDate.replace("-", "");
+            String hora = formattedTime.replace(":", "");
+
+            String idReport = "reporte_"+date+"T"+hora;
+
+            // Enviar el comando
+            db_reference.child("listado_buses").child(rutaSelected).child(busSelected).child("comando").setValue("foto,"+date+"T"+hora);
+
+            DatabaseReference reportesReference = db_reference.child("listado_buses").child(rutaSelected).child(busSelected).child("reportes");
+            reportesReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.exists()) {
+                        Log.d("TAG", "reportSelected: " + reportSelected);
+
+                        // Construir el objeto del nuevo reporte
+                        Map<String, Object> parametersReport = new HashMap<>();
+                        parametersReport.put("tipo", reportSelected);
+                        parametersReport.put("confirmado", "false");
+                        parametersReport.put("fecha", formattedDate);
+                        parametersReport.put("foto", "NULL");
+                        parametersReport.put("hora", formattedTime);
+                        parametersReport.put("latitud", "NULL");
+                        parametersReport.put("longitud", "NULL");
+
+                        reportesReference.child(idReport).setValue(parametersReport);
+
+                    } else {
+                        Log.d("TAG", "El nodo de reportes no existe");
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    Log.e("TAG", "Error en la consulta: " + databaseError.getMessage());
+                }
+            });
+
+            inflarActRutaBuses();
+
+        } else {
+            Toast.makeText(this, "Reporte no seleccionado", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -482,20 +731,13 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
                         LinearLayoutManager layoutManager = new LinearLayoutManager(entorno_principal.this);
                         recyclerViewRuta.setLayoutManager(layoutManager);
 
-                        // Lista de ejemplo para comprobar el codigo realizado
-                        List<String> listReporte = new ArrayList<>();
-                        listReporte.add("Reporte 1");
-                        listReporte.add("Reporte 2");
-                        listReporte.add("Reporte 3");
-                        listReporte.add("Reporte 4");
-                        listReporte.add("Reporte 5");
-                        listReporte.add("Reporte 6");
+
 
                         // Construccion del adptador para cargar los elementos a cada item
-                        AdapterItemReporte adpaterReportes;
-                        adpaterReportes = new AdapterItemReporte(listReporte);
+                        adpaterReportes = new AdapterItemReporte(listReportes);
                         adpaterReportes.setOnItemClickListener(entorno_principal.this);
                         recyclerViewRuta.setAdapter(adpaterReportes);
+                        loadDBReporte();
                     }
                 });
             }
@@ -524,5 +766,202 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
             e.printStackTrace();
             return null;
         }
+    }
+
+    // Permite cargar las rutas de la base de datos
+    void loadDBReporte() {
+        db_reference.child("listado_buses")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot)
+                    {
+                        listReportes.clear();
+                        for (DataSnapshot snapshotRutas : dataSnapshot.getChildren())
+                        {
+                            //listRutas.add(snapshotRutas.getKey().toString());
+                            for (DataSnapshot snapshotBuses : snapshotRutas.getChildren())
+                            {
+                                for (DataSnapshot snapshotReportes : snapshotBuses.child("reportes").getChildren())
+                                {
+                                    //Collections.sort(convertToFormattedString(snapshotReportes.getKey().toString()), Collections.reverseOrder());
+                                    //if( "false".equals(snapshotReportes.child("confirmado").getValue().toString()) )
+                                    //{
+                                        listReportes.add(convertToFormattedString(snapshotReportes.getKey().toString()));
+                                        Collections.sort(listReportes, Collections.reverseOrder());
+                                    //}
+
+                                }
+                            }
+                        }
+                        adpaterReportes.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        System.out.println(error.toException());
+                    }
+                });
+    }
+
+    @Override
+    public void onItemReporteClick(int position) {
+        // Mensaje
+        //Toast.makeText(this, "Elemento en la posición " + position + " clickeado", Toast.LENGTH_SHORT).show();
+
+        // Adquiere el bus y el horario selecionado
+        reporteSelected = listReportes.get(position);
+
+
+        // Definir el titulo de la toolbar
+        toolbar.setTitle(reporteSelected);
+
+        // Declara el objeto que representa el archivo xml que se piensa inflar
+        CreateConfirmationReportFragment createConfirmationReportFragment = new CreateConfirmationReportFragment();
+
+
+        // Solicita el permiso para solicitar la ubicacion del dispositivo y usa googlemaps
+        if (ContextCompat.checkSelfPermission(entorno_principal.this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // El permiso no se ha concedido, se solicita al usuario
+            ActivityCompat.requestPermissions(entorno_principal.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_LOCATION_PERMISSION);
+        } else { }
+
+        loadDatosReporteDB(reporteSelected);
+
+
+        // Infla el archivo xml en el contenedor de la actividad
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, createConfirmationReportFragment)
+                .commit();
+
+        // Las modificaciones de elementos de la interfaz grafica se generan despues de 1ms
+        // Nota: Se debe esperar un tiempo para inflar el xml, o si no genera error.
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        // Se implementa los elementos para el recycleView, en este caso los horarios
+                        //RecyclerView recyclerViewSelectReport;
+                        //recyclerViewSelectReport = createReportFragment.requireView().findViewById(R.id.idRecycleViewSelectReport);
+                        //LinearLayoutManager layoutManager = new LinearLayoutManager(entorno_principal.this);
+                        //recyclerViewSelectReport.setLayoutManager(layoutManager);
+
+                        ImageView imvPhotoReport;
+                        imvPhotoReport = createConfirmationReportFragment.requireView().findViewById(R.id.imageViewReporteConfirmar);
+                        TextView txtTipoEmergencia;
+                        txtTipoEmergencia = createConfirmationReportFragment.requireView().findViewById(R.id.textViewValorTipoReporte);
+                        TextView txtLatitud;
+                        txtLatitud = createConfirmationReportFragment.requireView().findViewById(R.id.textViewValorLatitudReporte);
+                        TextView txtLongitud;
+                        txtLongitud = createConfirmationReportFragment.requireView().findViewById(R.id.textViewValorLongitudReporte);
+
+                        TextView txtRutaReporte;
+                        txtRutaReporte = createConfirmationReportFragment.requireView().findViewById(R.id.textRutaDelReporte);
+
+
+
+                        Picasso.get().load(strUrlFoto).into(imvPhotoReport);
+                        txtTipoEmergencia.setText(strTipoReporte);
+                        txtLatitud.setText(strLatitudReporte);
+                        txtLongitud.setText(strLongitudReporte);
+
+                        txtRutaReporte.setText(strRutaReporte + " - "+ strHorarioReporte + " - "+  strMatriculaBusReporte);
+
+                    }
+                });
+            }
+        }, 1);
+    }
+
+    void loadDatosReporteDB(String reporteSelected){
+        db_reference.child("listado_buses")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot)
+                    {
+                        strUrlFoto           = null;
+                        strLatitudReporte    = null;
+                        strLongitudReporte   = null;
+                        strTipoReporte       = null;
+                        strHoraReporte       = null;
+                        strFechaReporte      = null;
+                        strConfiramdoReporte = null;
+                        strRutaReporte       = null;
+                        strRutaReporteOriginal = null;
+                        strNombreReporteSeleccionado = null;
+                        strBusReporte        = null;
+                        strHorarioReporte    = null;
+                        strMatriculaBusReporte = null;
+                        for (DataSnapshot snapshotRutas : dataSnapshot.getChildren())
+                        {
+                            //listRutas.add(snapshotRutas.getKey().toString());
+
+                            for (DataSnapshot snapshotBuses : snapshotRutas.getChildren())
+                            {
+                                for (DataSnapshot snapshotReportes : snapshotBuses.child("reportes").getChildren())
+                                {
+                                    if(reporteSelected.equals(convertToFormattedString(snapshotReportes.getKey().toString())))
+                                    {
+                                        strRutaReporte       = convertirAFormatoCorrecto(snapshotRutas.getKey().toString()) ;
+                                        strRutaReporteOriginal = snapshotRutas.getKey().toString();
+                                        strBusReporte         =  snapshotBuses.getKey().toString();
+                                        strNombreReporteSeleccionado = snapshotReportes.getKey().toString();
+                                        strHorarioReporte    = snapshotBuses.child("horario").getValue().toString();
+                                        strMatriculaBusReporte = snapshotBuses.child("matricula").getValue().toString();
+                                        strUrlFoto           = snapshotReportes.child("foto").getValue().toString();
+                                        strLatitudReporte    = snapshotReportes.child("latitud").getValue().toString();
+                                        strLongitudReporte   = snapshotReportes.child("longitud").getValue().toString();
+                                        strTipoReporte       = snapshotReportes.child("tipo").getValue().toString();
+                                        strHoraReporte       = snapshotReportes.child("hora").getValue().toString();
+                                        strFechaReporte      = snapshotReportes.child("fecha").getValue().toString();
+                                        strConfiramdoReporte = snapshotReportes.child("confirmado").getValue().toString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        System.out.println(error.toException());
+                    }
+                });
+
+    }
+
+    public String convertirAFormatoCorrecto(String input) {
+        String[] palabras = input.split("_");
+        StringBuilder builder = new StringBuilder();
+
+        for (String palabra : palabras) {
+            if (!palabra.isEmpty()) {
+                builder.append(Character.toUpperCase(palabra.charAt(0)));
+                builder.append(palabra.substring(1).toLowerCase());
+                builder.append(" ");
+            }
+        }
+
+        return builder.toString().trim();
+    }
+
+    public void onClickConfirmationReport(View v){
+
+        // Enviar el comando
+        db_reference.child("listado_buses").child(strRutaReporteOriginal).child(strBusReporte).child("reportes").child(strNombreReporteSeleccionado).child("confirmado").setValue("true");
+        inflarListaReporte();
+    }
+
+    public void onClickEliminarReport(View v){
+
+        // Enviar el comando
+        db_reference.child("listado_buses").child(strRutaReporteOriginal).child(strBusReporte).child("reportes").child(strNombreReporteSeleccionado).removeValue();
+        inflarListaReporte();
     }
 }

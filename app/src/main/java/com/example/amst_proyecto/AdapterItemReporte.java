@@ -16,7 +16,7 @@ public class AdapterItemReporte extends RecyclerView.Adapter<AdapterItemReporte.
     private OnItemClickListener clickListener;
 
     public interface OnItemClickListener {
-        void onItemRutaClick(int position);
+        void onItemReporteClick(int position);
     }
 
     public void setOnItemClickListener(OnItemClickListener listener) {
@@ -44,7 +44,7 @@ public class AdapterItemReporte extends RecyclerView.Adapter<AdapterItemReporte.
             @Override
             public void onClick(View view) {
                 if (clickListener != null) {
-                    clickListener.onItemRutaClick(position);
+                    clickListener.onItemReporteClick(position);
                 }
             }
         });
@@ -63,5 +63,8 @@ public class AdapterItemReporte extends RecyclerView.Adapter<AdapterItemReporte.
             itemTextViewReporte = itemView.findViewById(R.id.idItemReporte);
 
         }
+    }
+
+    public static class CreateConfirmarReportFragment {
     }
 }

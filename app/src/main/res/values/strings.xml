@@ -25,6 +25,7 @@
     <string name="editar_horario">Editar horarios</string>
     <string name="agregar_horario">Agregar horarios</string>
     <string name="lista_reportes">Historial de reportes</string>
+    <string name="reportar">Reportar</string>
 
     <string name="navigation_drawer_open">navigation_drawer_open</string>
     <string name="navigation_drawer_close">navigation_drawer_close</string>

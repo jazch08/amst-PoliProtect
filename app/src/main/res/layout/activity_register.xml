@@ -23,15 +23,40 @@
             android:lineSpacingExtra="8sp"
             android:text="Registro"
             android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+            android:textColor="@color/Olvidado_contraseña_color"
             android:textStyle="bold"
             android:typeface="normal" />
 
-        <ImageButton
-            android:id="@+id/btnImage"
-            android:layout_width="140dp"
-            android:layout_height="140dp"
-            android:layout_marginBottom="20dp"
-            tools:srcCompat="@tools:sample/avatars" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="15dp">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/imgPerfil"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:padding="3dp"
+                app:shapeAppearanceOverlay="@style/circular"
+                app:srcCompat="@drawable/baseline_person_24"
+                app:strokeColor="@color/fondo"
+                app:strokeWidth="5dp"
+                tools:ignore="MissingConstraints"
+                tools:layout_editor_absoluteX="11dp"
+                tools:layout_editor_absoluteY="6dp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/btnPerfil"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:clickable="true"
+                android:onClick="cargarImgPerfil"
+                app:fabCustomSize="30dp"
+                app:srcCompat="@android:drawable/ic_menu_camera"
+                tools:ignore="MissingConstraints"
+                tools:layout_editor_absoluteX="113dp"
+                tools:layout_editor_absoluteY="114dp" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -45,7 +70,8 @@
                 android:layout_height="wrap_content"
                 android:labelFor="@id/txt_nombre"
                 android:text="Nombre Completo"
-                android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:textColor="@color/Olvidado_contraseña_color" />
 
             <EditText
                 android:id="@+id/txt_nombre"
@@ -55,7 +81,8 @@
                 android:ems="10"
                 android:hint="Nombre completo"
                 android:inputType="text"
-                android:lineSpacingExtra="8sp" />
+                android:lineSpacingExtra="8sp"
+                android:textColor="@color/Olvidado_contraseña_color" />
         </LinearLayout>
 
         <LinearLayout
@@ -70,7 +97,8 @@
                 android:layout_height="wrap_content"
                 android:labelFor="@id/txt_correo"
                 android:text="Correo"
-                android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:textColor="@color/Olvidado_contraseña_color" />
 
             <EditText
                 android:id="@+id/txt_correo"
@@ -78,13 +106,14 @@
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:hint="ejemplo@ejemplo.com"
-                android:inputType="text" />
+                android:inputType="text"
+                android:textColor="@color/Olvidado_contraseña_color" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="40dp"
+            android:layout_marginBottom="25dp"
             android:orientation="vertical">
 
             <TextView
@@ -93,7 +122,8 @@
                 android:layout_height="wrap_content"
                 android:labelFor="@id/txt_contrasena"
                 android:text="Contraseña"
-                android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:textColor="@color/Olvidado_contraseña_color" />
 
             <EditText
                 android:id="@+id/txt_contrasena"
@@ -101,7 +131,7 @@
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:hint="************"
-                android:inputType="text" />
+                android:inputType="textPassword" />
 
         </LinearLayout>
 
@@ -109,34 +139,38 @@
             android:id="@+id/btn_registrarse"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:onClick="registrarse"
             android:text="Registrarse"
-            app:backgroundTint="@color/fondo"
 
 
-            />
+            app:backgroundTint="@color/fondo" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_marginTop="25dp"
             android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/textView11"
-                android:layout_width="1dp"
+                android:layout_width="221dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="¿Ya tienes cuenta?"
-                android:textColor="@color/Olvidado_contraseña_color"/>
+                android:textColor="@color/Olvidado_contraseña_color" />
 
             <TextView
                 android:id="@+id/txtB_inicia_sesion"
                 android:layout_width="100dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:clickable="true"
+                android:onClick="goIniciarSesion"
                 android:text="Inicia Sesión"
                 android:textColor="@color/forgot"
                 android:textColorHighlight="@color/forgot"
                 android:textColorLink="@color/forgot" />
         </LinearLayout>
+
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
