@@ -46,8 +46,12 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-public class entorno_principal extends AppCompatActivity implements OnMapReadyCallback, AdapterItemHorario.OnItemClickListener, AdapterItemRuta.OnItemClickListener {
+
+public class entorno_principal extends AppCompatActivity implements OnMapReadyCallback, AdapterItemHorario.OnItemClickListener, AdapterItemRuta.OnItemClickListener,AdapterItemReporte.OnItemClickListener {
 
     // Declaracion de los elementos relacionado a la interfaz grafica
     private Toolbar toolbar;
@@ -151,7 +155,9 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
                 } else if (idItem == R.id.idAdminAgregarHorario) {
 
                 } else if (idItem == R.id.idAdminListaReporte) {
-
+                    if(isConectedInternet()){
+                        inflarListaReporte();
+                    }
                 } else if (idItem == R.id.idAdminCerrarSesion) {
                     if(isConectedInternet()){
                         FirebaseAuth.getInstance().signOut();
@@ -167,11 +173,13 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
                     if(isConectedInternet()){
                         inflarActRutaBuses();
                     }
-                } else if (idItem == R.id.idEstudiantReporteMap) {
+                }
+                else if (idItem == R.id.idEstudiantReporteMap) {
                     // Definir el titulo de la toolbar
                     toolbar.setTitle("Reportes");
 
-                } else if (idItem == R.id.idEstudiantCerrarSesion) {
+                }
+                else if (idItem == R.id.idEstudiantCerrarSesion) {
                     if(isConectedInternet()){
                         FirebaseAuth.getInstance().signOut();
                         finish();
@@ -190,35 +198,7 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
 
     }
 
-    // Definir el evento onClick para el item de AdapterHorario
-    @Override
-    public void onItemHorarioClick(int position) {
-        // Mensaje
-        Toast.makeText(this, "Elemento en la posición " + position + " clickeado", Toast.LENGTH_SHORT).show();
 
-        // Declara el objeto que representa el archivo xml que se piensa inflar
-        UbicacionBusesFragment ubicacionBusesFragment = new UbicacionBusesFragment();
-
-        // Solicita el permiso para solicitar la ubicacion del dispositivo y usa googlemaps
-        if (ContextCompat.checkSelfPermission(entorno_principal.this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            // El permiso no se ha concedido, se solicita al usuario
-            ActivityCompat.requestPermissions(entorno_principal.this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    REQUEST_LOCATION_PERMISSION);
-        } else {
-            // El permiso ya se ha concedido, puedes realizar las operaciones relacionadas con la ubicación
-            // aquí mismo o en algún otro lugar de tu código.
-        }
-
-        ubicacionBusesFragment.loadDataPosition(-2.19616, -79.88621,"Bus Ruta N");
-
-        // Infla el archivo xml en el contenedor de la actividad
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, ubicacionBusesFragment)
-                .commit();
-    }
 
     // Definir el evenbto onClick para el item de AdapterRuta
     public void onItemRutaClick(int position) {
@@ -262,6 +242,8 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
                         horas.add("20:00");
 
                         // Construccion del adptador para cargar los elementos a cada item
+
+
                         AdapterItemHorario adpaterHorarios;
                         adpaterHorarios = new AdapterItemHorario(horas);
                         adpaterHorarios.setOnItemClickListener(entorno_principal.this);
@@ -272,6 +254,35 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
         }, 1);
     }
 
+    // Definir el evento onClick para el item de AdapterHorario
+    @Override
+    public void onItemHorarioClick(int position) {
+        // Mensaje
+        Toast.makeText(this, "Elemento en la posición " + position + " clickeado", Toast.LENGTH_SHORT).show();
+
+        // Declara el objeto que representa el archivo xml que se piensa inflar
+        UbicacionBusesFragment ubicacionBusesFragment = new UbicacionBusesFragment();
+
+        // Solicita el permiso para solicitar la ubicacion del dispositivo y usa googlemaps
+        if (ContextCompat.checkSelfPermission(entorno_principal.this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // El permiso no se ha concedido, se solicita al usuario
+            ActivityCompat.requestPermissions(entorno_principal.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_LOCATION_PERMISSION);
+        } else {
+            // El permiso ya se ha concedido, puedes realizar las operaciones relacionadas con la ubicación
+            // aquí mismo o en algún otro lugar de tu código.
+        }
+
+        ubicacionBusesFragment.loadDataPosition(-2.19616, -79.88621,"Bus Ruta N");
+
+        // Infla el archivo xml en el contenedor de la actividad
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, ubicacionBusesFragment)
+                .commit();
+    }
 
     // Define los parametros del elemnto que representa googleMaps
     @Override
@@ -439,6 +450,79 @@ public class entorno_principal extends AppCompatActivity implements OnMapReadyCa
         }
         else{
             Toast.makeText(this, "No hay Conexion", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void inflarListaReporte(){
+        // Definir el titulo de la toolbar
+        toolbar.setTitle("Listado de Reportes");
+
+        // Declara el objeto que representa el archivo xml que se piensa inflar
+        ListElementsFragment listadoReporteFragment = new ListElementsFragment();
+
+        // Infla el archivo xml en el contenedor de la actividad
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, listadoReporteFragment)
+                .commit();
+
+        // Las modificaciones de elementos de la interfaz grafica se generan despues de 1ms
+        // Nota: Se debe esperar un tiempo para inflar el xml, o si no genera error.
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        // Se implementa los elementos para el recycleView, en este caso los horarios
+                        RecyclerView recyclerViewRuta;
+                        recyclerViewRuta = listadoReporteFragment.requireView().findViewById(R.id.idRecycleViewListElements);
+                        LinearLayoutManager layoutManager = new LinearLayoutManager(entorno_principal.this);
+                        recyclerViewRuta.setLayoutManager(layoutManager);
+
+                        // Lista de ejemplo para comprobar el codigo realizado
+                        List<String> listReporte = new ArrayList<>();
+                        listReporte.add("Reporte 1");
+                        listReporte.add("Reporte 2");
+                        listReporte.add("Reporte 3");
+                        listReporte.add("Reporte 4");
+                        listReporte.add("Reporte 5");
+                        listReporte.add("Reporte 6");
+
+                        // Construccion del adptador para cargar los elementos a cada item
+                        AdapterItemReporte adpaterReportes;
+                        adpaterReportes = new AdapterItemReporte(listReporte);
+                        adpaterReportes.setOnItemClickListener(entorno_principal.this);
+                        recyclerViewRuta.setAdapter(adpaterReportes);
+                    }
+                });
+            }
+        }, 1);
+    }
+
+    public static String convertToFormattedString(String input) {
+        String dateString = input.substring(8, 16); // Extract "20230813T"
+        String timeString = input.substring(17,23); // Extract "192030"
+
+        SimpleDateFormat inputDateFormat = new SimpleDateFormat("yyyyMMdd");
+        SimpleDateFormat outputDateFormat = new SimpleDateFormat("yyyy/MM/dd");
+
+        SimpleDateFormat inputTimeFormat = new SimpleDateFormat("HHmmss");
+        SimpleDateFormat outputTimeFormat = new SimpleDateFormat("HH:mm:ss");
+
+        try {
+            Date date = inputDateFormat.parse(dateString);
+            Date time = inputTimeFormat.parse(timeString);
+
+            String formattedDate = outputDateFormat.format(date);
+            String formattedTime = outputTimeFormat.format(time);
+
+            return "Reporte " + formattedDate + " " + formattedTime;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 }
