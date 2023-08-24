@@ -71,4 +71,7 @@ dependencies {
     // Permite manejar Json
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.5'
 
+    // Imagenes de galeria o camara
+    implementation 'com.github.dhaval2404:imagepicker:2.1'
+
 }

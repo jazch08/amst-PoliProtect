@@ -32,11 +32,16 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.example.amst_proyecto.data.Coordenada;
+import com.example.amst_proyecto.data.Horario;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -197,8 +202,9 @@ public class entorno_principal extends AppCompatActivity implements AdapterItemH
                 } else if (idItem == R.id.idAdminReporteMap) {
 
                 } else if (idItem == R.id.idEditarHorarios) {
-
+                    editarHorario();
                 } else if (idItem == R.id.idAdminAgregarHorario) {
+                    agregarHorario();
 
                 } else if (idItem == R.id.idAdminListaReporte) {
 
@@ -240,7 +246,301 @@ public class entorno_principal extends AppCompatActivity implements AdapterItemH
 
     }
 
+    private void editarHorario() {
+        // Definir el titulo de la toolbar
+        toolbar.setTitle("Crear rutas y horarios");
+
+        // Declara el objeto que representa el archivo xml que se piensa inflar
+        EditarHorariosFragment editarHorariosFragment = new EditarHorariosFragment();
+
+        // Infla el archivo xml en el contenedor de la actividad
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, editarHorariosFragment)
+                .commit();
+
+        // Las modificaciones de elementos de la interfaz grafica se generan despues de 1ms
+        // Nota: Se debe esperar un tiempo para inflar el xml, o si no genera error.
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Se resetea las variables
+                        TimePicker timePicker = findViewById(R.id.timePickerEd);
+                        timePicker.setIs24HourView(true);
+
+                        Spinner spEd = findViewById(R.id.spRutasEd);
+                        Spinner spNombreEd = findViewById(R.id.spNombresBusesEd);
+                        ArrayList<String> buses = new ArrayList<>();
+                        ArrayList<String> busesNombres = new ArrayList<>();
+
+                        DatabaseReference listadoBusesRef = databaseRef.child("listado_buses");
+
+                        ValueEventListener postListener = new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                buses.clear();
+
+                                for(DataSnapshot data : dataSnapshot.getChildren()){
+                                    buses.add(data.getKey());
+                                }
+                                ArrayAdapter<String> adapterVIEW = new ArrayAdapter<>(entorno_principal.this, android.R.layout.simple_dropdown_item_1line,buses);
+                                spEd.setAdapter(adapterVIEW);
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                                // Getting Post failed, log a message
+                                Log.w(TAG, "loadPost:onCancelled", databaseError.toException());
+                            }
+                        };
+                        listadoBusesRef.addValueEventListener(postListener);
+
+                        spEd.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                            @Override
+                            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                                String rutaSeleccionada = spEd.getSelectedItem().toString();
+
+                                DatabaseReference listadoRutaRef = databaseRef.child("listado_buses").child(rutaSeleccionada);
+                                ValueEventListener postListenerBus = new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        busesNombres.clear();
+
+                                        for(DataSnapshot data : dataSnapshot.getChildren()){
+                                            busesNombres.add(data.getKey());
+                                        }
+                                        ArrayAdapter<String> adapterVIEWBus = new ArrayAdapter<>(entorno_principal.this, android.R.layout.simple_dropdown_item_1line,busesNombres);
+                                        spNombreEd.setAdapter(adapterVIEWBus);
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+                                        // Getting Post failed, log a message
+                                        Log.w(TAG, "loadPost:onCancelled", databaseError.toException());
+                                    }
+                                };
+                                listadoRutaRef.addValueEventListener(postListenerBus);
+                            }
+
+                            @Override
+                            public void onNothingSelected(AdapterView<?> adapterView) {
+
+                            }
+                        });
+                    }
+                });
+            }
+        }, 1);
+    }
+
+    public void editarHorarioClick(View view){
+        TextView txtMatricula = findViewById(R.id.txtMatriculaEd);
+        TimePicker timePicker = findViewById(R.id.timePickerEd);
+        Spinner spEd = findViewById(R.id.spRutasEd);
+        Spinner spNombreEd = findViewById(R.id.spNombresBusesEd);
+        DatabaseReference buses = databaseRef.child("listado_buses");
+
+        Boolean matriculaLleno = txtMatricula.getText().length()>0;
+
+        String horario = "";
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            horario = timePicker.getHour() + "h" + timePicker.getMinute();
+        }else {
+            timePicker.getCurrentHour();
+            timePicker.getCurrentMinute();
+            horario = timePicker.getCurrentHour() + "h" + timePicker.getCurrentMinute();
+        }
+
+        boolean rutaSelected = spEd.getSelectedItem() != null;
+        boolean busSelected = spNombreEd.getSelectedItem() != null;
+
+        if(matriculaLleno && rutaSelected && busSelected){
+            System.out.println(spEd.getSelectedItem().toString());
+            System.out.println(spNombreEd.getSelectedItem().toString());
+            DatabaseReference matricularef = buses.child(spEd.getSelectedItem().toString()).child(spNombreEd.getSelectedItem().toString()).child("matricula");
+            DatabaseReference horarioref = buses.child(spEd.getSelectedItem().toString()).child(spNombreEd.getSelectedItem().toString()).child("horario");
+            matricularef.setValue(txtMatricula.getText().toString());
+            horarioref.setValue(horario);
+            Toast.makeText(entorno_principal.this, "Horario creado", Toast.LENGTH_SHORT).show();
+        }else {
+            Toast.makeText(entorno_principal.this, "Elementos sin llenar", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+    private void agregarHorario() {
+        // Definir el titulo de la toolbar
+        toolbar.setTitle("Crear rutas y horarios");
+
+        // Declara el objeto que representa el archivo xml que se piensa inflar
+        CrearHorariosFragment crearHorariosFragment = new CrearHorariosFragment();
+
+        // Infla el archivo xml en el contenedor de la actividad
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, crearHorariosFragment)
+                .commit();
+
+        // Las modificaciones de elementos de la interfaz grafica se generan despues de 1ms
+        // Nota: Se debe esperar un tiempo para inflar el xml, o si no genera error.
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Se resetea las variables
+                        TimePicker timePicker = findViewById(R.id.timePickerCr);
+                        timePicker.setIs24HourView(true);
+
+                        Spinner spCr = findViewById(R.id.spRutasCr);
+                        ArrayList<String> buses = new ArrayList<>();
+
+                        DatabaseReference listadoBusesRef = databaseRef.child("listado_buses");
+
+                        ValueEventListener postListener = new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                buses.clear();
+
+                                for(DataSnapshot data : dataSnapshot.getChildren()){
+                                    buses.add(data.getKey());
+                                }
+                                ArrayAdapter<String> adapterVIEW = new ArrayAdapter<>(entorno_principal.this, android.R.layout.simple_dropdown_item_1line,buses);
+                                spCr.setAdapter(adapterVIEW);
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                                // Getting Post failed, log a message
+                                Log.w(TAG, "loadPost:onCancelled", databaseError.toException());
+                            }
+                        };
+                        listadoBusesRef.addValueEventListener(postListener);
+                    }
+                });
+            }
+        }, 1);
+    }
+
+    public void CrearRutaClick(View view){
+        TextView txtNombreRuta = findViewById(R.id.txtNombreRutasCr);
+        DatabaseReference buses = databaseRef.child("listado_buses");
+
+        if(txtNombreRuta.getText().length()>=0){
+            buses.child(txtNombreRuta.getText().toString()).setValue("");
+            Toast.makeText(entorno_principal.this, "Ruta Creada", Toast.LENGTH_SHORT).show();
+        }
+        else{
+            Toast.makeText(entorno_principal.this, "Llene el campo de nombre de ruta", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void crearHorarioClick(View view){
+        Spinner sp = findViewById(R.id.spRutasCr);
+        DatabaseReference buses = databaseRef.child("listado_buses");
+        TextView txtNombreBus = findViewById(R.id.txtNombreBusCr);
+        TextView txtMatricula = findViewById(R.id.txtMatriculaCr);
+        TimePicker timePicker = findViewById(R.id.timePickerCr);
+
+        String horario = "";
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            horario = timePicker.getHour() + "h" + timePicker.getMinute();
+        }else{
+            timePicker.getCurrentHour();
+            timePicker.getCurrentMinute();
+            horario = timePicker.getCurrentHour() + "h" + timePicker.getCurrentMinute();
+        }
+
+        boolean nombreBusLleno = txtNombreBus.getText().length()>0;
+        boolean matriculaLlena = txtMatricula.getText().length()>0;
+
+
+        if(nombreBusLleno && matriculaLlena){
+            Map<String, Object> parametersReport = new HashMap<>();
+            Map<String, Object> posicion = new HashMap<>();
+            posicion.put("latitud", 0);
+            posicion.put("longitud", 0);
+            posicion.put("satelites", 0);
+
+            parametersReport.put("bateria", 0);
+            parametersReport.put("comando", "Done");
+            parametersReport.put("conected", "connected");
+            parametersReport.put("conexion", "");
+            parametersReport.put("conexion_tiempo", "");
+            parametersReport.put("horario", horario);
+            parametersReport.put("matricula", txtMatricula.getText().toString());
+            parametersReport.put("posicion",posicion );
+            parametersReport.put("reportado", false);
+            parametersReport.put("reportado", "");
+
+            buses.child(sp.getSelectedItem().toString()).child(txtNombreBus.getText().toString()).setValue(parametersReport);
+            Toast.makeText(entorno_principal.this, "Horario creado", Toast.LENGTH_SHORT).show();
+        }
+        else{
+            Toast.makeText(entorno_principal.this, "Elementos sin llenar", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void djdjd(View view){
+        Spinner sp = findViewById(R.id.spRutasCr);
+        DatabaseReference buses = databaseRef.child("listado_buses");
+        TextView txtNombreBus = findViewById(R.id.txtNombreBusCr);
+        TextView txtMatricula = findViewById(R.id.txtMatriculaCr);
+        TimePicker timePicker = findViewById(R.id.timePickerCr);
+
+        String horario = "";
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            horario = timePicker.getHour() + "h" + timePicker.getMinute();
+        }else{
+            timePicker.getCurrentHour();
+            timePicker.getCurrentMinute();
+            horario = timePicker.getCurrentHour() + "h" + timePicker.getCurrentMinute();
+        }
+
+        boolean nombreBusLleno = txtNombreBus.getText().length()>0;
+        boolean matriculaLlena = txtMatricula.getText().length()>0;
+
+
+        if(nombreBusLleno && matriculaLlena){
+            Map<String, Object> parametersReport = new HashMap<>();
+            Map<String, Object> posicion = new HashMap<>();
+            posicion.put("latitud", 0);
+            posicion.put("longitud", 0);
+            posicion.put("satelites", 0);
+
+            parametersReport.put("bateria", 0);
+            parametersReport.put("comando", "Done");
+            parametersReport.put("conected", "connected");
+            parametersReport.put("conexion", "");
+            parametersReport.put("conexion_tiempo", "");
+            parametersReport.put("horario", horario);
+            parametersReport.put("matricula", txtMatricula.getText().toString());
+            parametersReport.put("posicion",posicion );
+            parametersReport.put("reportado", false);
+            parametersReport.put("reportado", "");
+
+            buses.child(sp.getSelectedItem().toString()).child(txtNombreBus.getText().toString()).setValue(parametersReport);
+            Toast.makeText(entorno_principal.this, "Horario creado", Toast.LENGTH_SHORT).show();
+        }
+        else{
+            Toast.makeText(entorno_principal.this, "Elementos sin llenar", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void inflarUbicacionesBusesMapa(){
+
+        //Barra se pantalla
+        toolbar.setTitle("Ubicaciones de todos los buses");
+
         // Declara el objeto que representa el archivo xml que se piensa inflar
         UbicacionesBusesMapFragment ubicacionesBusesMapaFragment = new UbicacionesBusesMapFragment();
 
@@ -253,8 +553,6 @@ public class entorno_principal extends AppCompatActivity implements AdapterItemH
                     REQUEST_LOCATION_PERMISSION);
         }
         DatabaseReference listadoBusesRef = databaseRef.child("listado_buses");
-
-
 
         ValueEventListener postListener = new ValueEventListener() {
             @Override
@@ -281,13 +579,6 @@ public class entorno_principal extends AppCompatActivity implements AdapterItemH
             }
         };
         listadoBusesRef.addValueEventListener(postListener);
-
-
-        //Coordenada coordenada = new Coordenada(-2.19616,-79.88621,"Bus Ruta N");
-        //ArrayList<Coordenada> listadoCoordenadas= new ArrayList<>();
-        //listadoCoordenadas.add(coordenada);
-        //ubicacionesBusesMapaFragment.setNombreArrayList(listadoCoordenadas);
-        //ubicacionesBusesMapaFragment.loadDataPosition(-2.19616, -79.88621,"Bus Ruta N");
 
         // Infla el archivo xml en el contenedor de la actividad
         FragmentManager fragmentManager = getSupportFragmentManager();
