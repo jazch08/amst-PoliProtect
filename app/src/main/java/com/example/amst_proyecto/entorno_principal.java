@@ -67,10 +67,13 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Collections;
 
-public class entorno_principal extends AppCompatActivity implements AdapterItemHorario.OnItemClickListener, AdapterItemRuta.OnItemClickListener, AdapterItemSelectReport.OnItemClickListener {
+public class entorno_principal extends AppCompatActivity implements AdapterItemHorario.OnItemClickListener, AdapterItemRuta.OnItemClickListener, AdapterItemSelectReport.OnItemClickListener,AdapterItemReporte.OnItemClickListener {
 
     // Declaracion de los elementos relacionado a la interfaz grafica
     private Toolbar toolbar;
@@ -96,6 +99,8 @@ public class entorno_principal extends AppCompatActivity implements AdapterItemH
     // Declaracion de Adaptadores
     private AdapterItemHorario adpaterHorarios;
     private AdapterItemRuta adpaterRutas;
+
+    private AdapterItemReporte adpaterReportes;
     private AdapterItemSelectReport adaptarSelectReport;
 
     // Referencia de la base de datos
@@ -107,6 +112,9 @@ public class entorno_principal extends AppCompatActivity implements AdapterItemH
     List<String> listRutaBuses = new ArrayList<>();
     List<String> listSelectReport = new ArrayList<>();
 
+    List<String> listReportes = new ArrayList<>();
+
+
     // Variables auxiliares para la creacion de reporte
     Boolean isReported = false;
     String rutaSelected = null;
@@ -116,6 +124,27 @@ public class entorno_principal extends AppCompatActivity implements AdapterItemH
     double latitudeBusSelected;
     double longitudeBusSelected;
 
+    String reporteSelected = null;
+
+    //Son variables globales para confirmar reporte
+    String strUrlFoto = null;
+    String strLatitudReporte = null;
+    String strLongitudReporte = null;
+    String strTipoReporte = null;
+    String strHoraReporte = null;
+    String strFechaReporte = null;
+    String strConfiramdoReporte = null;
+
+    String strRutaReporte = null;
+
+    String strRutaReporteOriginal = null;
+
+    String strBusReporte = null;
+
+    String strNombreReporteSeleccionado = null;
+    String strHorarioReporte = null;
+
+    String strMatriculaBusReporte = null;
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -207,7 +236,9 @@ public class entorno_principal extends AppCompatActivity implements AdapterItemH
                     agregarHorario();
 
                 } else if (idItem == R.id.idAdminListaReporte) {
-
+                    if(isConectedInternet()){
+                        inflarListaReporte();
+                    }
                 } else if (idItem == R.id.idAdminCerrarSesion) {
                     if(isConectedInternet()){
                         FirebaseAuth.getInstance().signOut();
@@ -223,11 +254,13 @@ public class entorno_principal extends AppCompatActivity implements AdapterItemH
                     if(isConectedInternet()){
                         inflarActRutaBuses();
                     }
-                } else if (idItem == R.id.idEstudiantReporteMap) {
+                }
+                else if (idItem == R.id.idEstudiantReporteMap) {
                     // Definir el titulo de la toolbar
                     toolbar.setTitle("Reportes");
 
-                } else if (idItem == R.id.idEstudiantCerrarSesion) {
+                }
+                else if (idItem == R.id.idEstudiantCerrarSesion) {
                     if(isConectedInternet()){
                         FirebaseAuth.getInstance().signOut();
                         finish();
@@ -958,5 +991,268 @@ public class entorno_principal extends AppCompatActivity implements AdapterItemH
         } else {
             Toast.makeText(this, "Reporte no seleccionado", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void inflarListaReporte(){
+        // Definir el titulo de la toolbar
+        toolbar.setTitle("Listado de Reportes");
+
+        // Declara el objeto que representa el archivo xml que se piensa inflar
+        ListElementsFragment listadoReporteFragment = new ListElementsFragment();
+
+        // Infla el archivo xml en el contenedor de la actividad
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, listadoReporteFragment)
+                .commit();
+
+        // Las modificaciones de elementos de la interfaz grafica se generan despues de 1ms
+        // Nota: Se debe esperar un tiempo para inflar el xml, o si no genera error.
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        // Se implementa los elementos para el recycleView, en este caso los horarios
+                        RecyclerView recyclerViewRuta;
+                        recyclerViewRuta = listadoReporteFragment.requireView().findViewById(R.id.idRecycleViewListElements);
+                        LinearLayoutManager layoutManager = new LinearLayoutManager(entorno_principal.this);
+                        recyclerViewRuta.setLayoutManager(layoutManager);
+
+
+
+                        // Construccion del adptador para cargar los elementos a cada item
+                        adpaterReportes = new AdapterItemReporte(listReportes);
+                        adpaterReportes.setOnItemClickListener(entorno_principal.this);
+                        recyclerViewRuta.setAdapter(adpaterReportes);
+                        loadDBReporte();
+                    }
+                });
+            }
+        }, 1);
+    }
+
+    public static String convertToFormattedString(String input) {
+        String dateString = input.substring(8, 16); // Extract "20230813T"
+        String timeString = input.substring(17,23); // Extract "192030"
+
+        SimpleDateFormat inputDateFormat = new SimpleDateFormat("yyyyMMdd");
+        SimpleDateFormat outputDateFormat = new SimpleDateFormat("yyyy/MM/dd");
+
+        SimpleDateFormat inputTimeFormat = new SimpleDateFormat("HHmmss");
+        SimpleDateFormat outputTimeFormat = new SimpleDateFormat("HH:mm:ss");
+
+        try {
+            Date date = inputDateFormat.parse(dateString);
+            Date time = inputTimeFormat.parse(timeString);
+
+            String formattedDate = outputDateFormat.format(date);
+            String formattedTime = outputTimeFormat.format(time);
+
+            return "Reporte " + formattedDate + " " + formattedTime;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // Permite cargar las rutas de la base de datos
+    void loadDBReporte() {
+        db_reference.child("listado_buses")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot)
+                    {
+                        listReportes.clear();
+                        for (DataSnapshot snapshotRutas : dataSnapshot.getChildren())
+                        {
+                            //listRutas.add(snapshotRutas.getKey().toString());
+                            for (DataSnapshot snapshotBuses : snapshotRutas.getChildren())
+                            {
+                                for (DataSnapshot snapshotReportes : snapshotBuses.child("reportes").getChildren())
+                                {
+                                    //Collections.sort(convertToFormattedString(snapshotReportes.getKey().toString()), Collections.reverseOrder());
+                                    //if( "false".equals(snapshotReportes.child("confirmado").getValue().toString()) )
+                                    //{
+                                        listReportes.add(convertToFormattedString(snapshotReportes.getKey().toString()));
+                                        Collections.sort(listReportes, Collections.reverseOrder());
+                                    //}
+
+                                }
+                            }
+                        }
+                        adpaterReportes.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        System.out.println(error.toException());
+                    }
+                });
+    }
+
+    @Override
+    public void onItemReporteClick(int position) {
+        // Mensaje
+        //Toast.makeText(this, "Elemento en la posición " + position + " clickeado", Toast.LENGTH_SHORT).show();
+
+        // Adquiere el bus y el horario selecionado
+        reporteSelected = listReportes.get(position);
+
+
+        // Definir el titulo de la toolbar
+        toolbar.setTitle(reporteSelected);
+
+        // Declara el objeto que representa el archivo xml que se piensa inflar
+        CreateConfirmationReportFragment createConfirmationReportFragment = new CreateConfirmationReportFragment();
+
+
+        // Solicita el permiso para solicitar la ubicacion del dispositivo y usa googlemaps
+        if (ContextCompat.checkSelfPermission(entorno_principal.this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // El permiso no se ha concedido, se solicita al usuario
+            ActivityCompat.requestPermissions(entorno_principal.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_LOCATION_PERMISSION);
+        } else { }
+
+        loadDatosReporteDB(reporteSelected);
+
+
+        // Infla el archivo xml en el contenedor de la actividad
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, createConfirmationReportFragment)
+                .commit();
+
+        // Las modificaciones de elementos de la interfaz grafica se generan despues de 1ms
+        // Nota: Se debe esperar un tiempo para inflar el xml, o si no genera error.
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        // Se implementa los elementos para el recycleView, en este caso los horarios
+                        //RecyclerView recyclerViewSelectReport;
+                        //recyclerViewSelectReport = createReportFragment.requireView().findViewById(R.id.idRecycleViewSelectReport);
+                        //LinearLayoutManager layoutManager = new LinearLayoutManager(entorno_principal.this);
+                        //recyclerViewSelectReport.setLayoutManager(layoutManager);
+
+                        ImageView imvPhotoReport;
+                        imvPhotoReport = createConfirmationReportFragment.requireView().findViewById(R.id.imageViewReporteConfirmar);
+                        TextView txtTipoEmergencia;
+                        txtTipoEmergencia = createConfirmationReportFragment.requireView().findViewById(R.id.textViewValorTipoReporte);
+                        TextView txtLatitud;
+                        txtLatitud = createConfirmationReportFragment.requireView().findViewById(R.id.textViewValorLatitudReporte);
+                        TextView txtLongitud;
+                        txtLongitud = createConfirmationReportFragment.requireView().findViewById(R.id.textViewValorLongitudReporte);
+
+                        TextView txtRutaReporte;
+                        txtRutaReporte = createConfirmationReportFragment.requireView().findViewById(R.id.textRutaDelReporte);
+
+
+
+                        Picasso.get().load(strUrlFoto).into(imvPhotoReport);
+                        txtTipoEmergencia.setText(strTipoReporte);
+                        txtLatitud.setText(strLatitudReporte);
+                        txtLongitud.setText(strLongitudReporte);
+
+                        txtRutaReporte.setText(strRutaReporte + " - "+ strHorarioReporte + " - "+  strMatriculaBusReporte);
+
+                    }
+                });
+            }
+        }, 1);
+    }
+
+    void loadDatosReporteDB(String reporteSelected){
+        db_reference.child("listado_buses")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot)
+                    {
+                        strUrlFoto           = null;
+                        strLatitudReporte    = null;
+                        strLongitudReporte   = null;
+                        strTipoReporte       = null;
+                        strHoraReporte       = null;
+                        strFechaReporte      = null;
+                        strConfiramdoReporte = null;
+                        strRutaReporte       = null;
+                        strRutaReporteOriginal = null;
+                        strNombreReporteSeleccionado = null;
+                        strBusReporte        = null;
+                        strHorarioReporte    = null;
+                        strMatriculaBusReporte = null;
+                        for (DataSnapshot snapshotRutas : dataSnapshot.getChildren())
+                        {
+                            //listRutas.add(snapshotRutas.getKey().toString());
+
+                            for (DataSnapshot snapshotBuses : snapshotRutas.getChildren())
+                            {
+                                for (DataSnapshot snapshotReportes : snapshotBuses.child("reportes").getChildren())
+                                {
+                                    if(reporteSelected.equals(convertToFormattedString(snapshotReportes.getKey().toString())))
+                                    {
+                                        strRutaReporte       = convertirAFormatoCorrecto(snapshotRutas.getKey().toString()) ;
+                                        strRutaReporteOriginal = snapshotRutas.getKey().toString();
+                                        strBusReporte         =  snapshotBuses.getKey().toString();
+                                        strNombreReporteSeleccionado = snapshotReportes.getKey().toString();
+                                        strHorarioReporte    = snapshotBuses.child("horario").getValue().toString();
+                                        strMatriculaBusReporte = snapshotBuses.child("matricula").getValue().toString();
+                                        strUrlFoto           = snapshotReportes.child("foto").getValue().toString();
+                                        strLatitudReporte    = snapshotReportes.child("latitud").getValue().toString();
+                                        strLongitudReporte   = snapshotReportes.child("longitud").getValue().toString();
+                                        strTipoReporte       = snapshotReportes.child("tipo").getValue().toString();
+                                        strHoraReporte       = snapshotReportes.child("hora").getValue().toString();
+                                        strFechaReporte      = snapshotReportes.child("fecha").getValue().toString();
+                                        strConfiramdoReporte = snapshotReportes.child("confirmado").getValue().toString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        System.out.println(error.toException());
+                    }
+                });
+
+    }
+
+    public String convertirAFormatoCorrecto(String input) {
+        String[] palabras = input.split("_");
+        StringBuilder builder = new StringBuilder();
+
+        for (String palabra : palabras) {
+            if (!palabra.isEmpty()) {
+                builder.append(Character.toUpperCase(palabra.charAt(0)));
+                builder.append(palabra.substring(1).toLowerCase());
+                builder.append(" ");
+            }
+        }
+
+        return builder.toString().trim();
+    }
+
+    public void onClickConfirmationReport(View v){
+
+        // Enviar el comando
+        db_reference.child("listado_buses").child(strRutaReporteOriginal).child(strBusReporte).child("reportes").child(strNombreReporteSeleccionado).child("confirmado").setValue("true");
+        inflarListaReporte();
+    }
+
+    public void onClickEliminarReport(View v){
+
+        // Enviar el comando
+        db_reference.child("listado_buses").child(strRutaReporteOriginal).child(strBusReporte).child("reportes").child(strNombreReporteSeleccionado).removeValue();
+        inflarListaReporte();
     }
 }

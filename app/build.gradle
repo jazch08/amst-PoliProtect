@@ -19,6 +19,7 @@ android {
         versionCode 1
         multiDexEnabled true
         versionName "1.0"
+        multiDexEnabled true
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -67,8 +68,9 @@ dependencies {
 
     // Libreria para mapas
     implementation 'com.google.android.gms:play-services-maps:18.1.0'
-
-    // Permite manejar Json
+    // Para generar la APK sin errores
+    implementation 'androidx.multidex:multidex:2.0.1'
+     // Permite manejar Json
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.5'
 
     // Imagenes de galeria o camara
