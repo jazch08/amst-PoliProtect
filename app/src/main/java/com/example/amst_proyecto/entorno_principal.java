@@ -228,9 +228,7 @@ public class entorno_principal extends AppCompatActivity implements AdapterItemH
                     }
                 } else if (idItem == R.id.idAdminVisualizarBuses) {
                     inflarUbicacionesBusesMapa();
-                } else if (idItem == R.id.idAdminReporteMap) {
-
-                } else if (idItem == R.id.idEditarHorarios) {
+                }  else if (idItem == R.id.idEditarHorarios) {
                     editarHorario();
                 } else if (idItem == R.id.idAdminAgregarHorario) {
                     agregarHorario();
@@ -254,11 +252,6 @@ public class entorno_principal extends AppCompatActivity implements AdapterItemH
                     if(isConectedInternet()){
                         inflarActRutaBuses();
                     }
-                }
-                else if (idItem == R.id.idEstudiantReporteMap) {
-                    // Definir el titulo de la toolbar
-                    toolbar.setTitle("Reportes");
-
                 }
                 else if (idItem == R.id.idEstudiantCerrarSesion) {
                     if(isConectedInternet()){
@@ -1075,11 +1068,19 @@ public class entorno_principal extends AppCompatActivity implements AdapterItemH
                                 for (DataSnapshot snapshotReportes : snapshotBuses.child("reportes").getChildren())
                                 {
                                     //Collections.sort(convertToFormattedString(snapshotReportes.getKey().toString()), Collections.reverseOrder());
-                                    //if( "false".equals(snapshotReportes.child("confirmado").getValue().toString()) )
-                                    //{
+                                    /*if( "false".equals(snapshotReportes.child("confirmado").getValue().toString()) )
+                                    {
                                         listReportes.add(convertToFormattedString(snapshotReportes.getKey().toString()));
                                         Collections.sort(listReportes, Collections.reverseOrder());
-                                    //}
+                                    }*/
+
+                                    if (snapshotReportes.hasChild("confirmado") && snapshotReportes.child("confirmado").getValue() != null) {
+                                        if( "false".equals(snapshotReportes.child("confirmado").getValue().toString()) )
+                                        {
+                                            listReportes.add(convertToFormattedString(snapshotReportes.getKey().toString()));
+                                            Collections.sort(listReportes, Collections.reverseOrder());
+                                        }
+                                    }
 
                                 }
                             }
