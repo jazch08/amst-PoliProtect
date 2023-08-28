@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.amst_proyecto'
+    namespace 'com.poliprotect.amst_proyecto'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.example.amst_proyecto"
+        applicationId "com.poliprotect.amst_proyecto"
         minSdk 19
         targetSdk 34
         versionCode 1

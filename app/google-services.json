@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "906374933031",
+    "firebase_url": "https://poliprotect-6b93c-default-rtdb.firebaseio.com",
     "project_id": "poliprotect-6b93c",
     "storage_bucket": "poliprotect-6b93c.appspot.com"
   },
@@ -14,11 +15,88 @@
       },
       "oauth_client": [
         {
-          "client_id": "906374933031-26l7emargqcgh3sllshn7v2f3aqdoub0.apps.googleusercontent.com",
+          "client_id": "906374933031-b9vnve8j5604j8qma4ohlnnr6l13gh25.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.amst_proyecto",
+            "certificate_hash": "cf071ab449c79096ce87d32ba48c4cd80d122fb4"
+          }
+        },
+        {
+          "client_id": "906374933031-cnfjkruomfej5th4hn0boqs8fjvfa5ku.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.amst_proyecto",
+            "certificate_hash": "a8c8911471afe3182539e624200119e0acdd7024"
+          }
+        },
+        {
+          "client_id": "906374933031-dej3u34a4rjic8sq8h240a3vrm7sl833.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.amst_proyecto",
+            "certificate_hash": "902009ef4024865c2974268e0fb8858009eebf93"
+          }
+        },
+        {
+          "client_id": "906374933031-e6qirfbu7kfervbqssjl5c43eofvd129.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.amst_proyecto",
+            "certificate_hash": "7fbc701e6adb71d99081009c9c58b2ec2ee49443"
+          }
+        },
+        {
+          "client_id": "906374933031-mtp0bau6a88jr2q0l6fpi5nv0dq4mock.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.amst_proyecto",
             "certificate_hash": "f52384980253b79c9c5ecda6547c8d25b95f4c98"
+          }
+        },
+        {
+          "client_id": "906374933031-rm5hi4jlf2m4q0pnumn5meg0gv6c5hnf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.amst_proyecto",
+            "certificate_hash": "7cd52cc0d931575eff48817d004466dd0b837dca"
+          }
+        },
+        {
+          "client_id": "906374933031-u51ns6s7t70bt185bqfkqocbmu3qauqc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJRSQnfMhIX8zuF4jvzugfQ2oWAqFq-W8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "906374933031-ldcobkeloh1knj1jc53lhltlkipshl6b.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:906374933031:android:13eb8f2f0597d7db9c7c02",
+        "android_client_info": {
+          "package_name": "com.poliprotect.amst_proyecto"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "906374933031-ml06u553kbbgoqk3cat45l3lollij6bo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.poliprotect.amst_proyecto",
+            "certificate_hash": "cf071ab449c79096ce87d32ba48c4cd80d122fb4"
           }
         },
         {

@@ -13,12 +13,6 @@
         android:icon="@drawable/ubicacion_buses_icon"
         android:title="@string/ubicacion_buses" />
     <item
-        android:id="@+id/idAdminReporteMap"
-        android:checkable="true"
-        android:checked="true"
-        android:icon="@drawable/reprote_icon"
-        android:title="@string/reporte" />
-    <item
         android:id="@+id/idEditarHorarios"
         android:checkable="true"
         android:checked="true"

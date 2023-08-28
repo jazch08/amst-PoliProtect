@@ -15,9 +15,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AMST_Proyecto"
+        android:versionCode="1"
+        android:versionName="1.0"
         tools:targetApi="31">
         <activity
-            android:name=".Register"
+            android:name="com.poliprotect.amst_proyecto.Register"
             android:exported="false" />
 
         <meta-data
@@ -25,13 +27,13 @@
             android:value="${MAPS_API_KEY}" />
 
         <activity
-            android:name=".entorno_principal"
+            android:name="com.poliprotect.amst_proyecto.entorno_principal"
             android:exported="false" />
         <activity
-            android:name=".iniciar_sesion"
+            android:name="com.poliprotect.amst_proyecto.iniciar_sesion"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name="com.poliprotect.amst_proyecto.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
